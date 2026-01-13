@@ -4,12 +4,18 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
+  variant?: 'dark' | 'light';
 }
 
-export const Card: React.FC<CardProps> = ({ children, className = '', onClick }) => {
+export const Card: React.FC<CardProps> = ({ children, className = '', onClick, variant = 'dark' }) => {
+  const baseClass =
+    variant === 'light'
+      ? 'bg-white border border-slate-200 rounded-lg shadow-sm'
+      : 'bg-slate-800 border border-slate-700 rounded-lg shadow-lg';
+
   return (
     <div
-      className={`bg-slate-800 border border-slate-700 rounded-lg shadow-lg ${className} ${
+      className={`${baseClass} ${className} ${
         onClick ? 'cursor-pointer hover:border-cyan-500/50 transition-colors' : ''
       }`}
       onClick={onClick}
@@ -22,11 +28,13 @@ export const Card: React.FC<CardProps> = ({ children, className = '', onClick })
 interface CardHeaderProps {
   children: React.ReactNode;
   className?: string;
+  variant?: 'dark' | 'light';
 }
 
-export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = '' }) => {
+export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = '', variant = 'dark' }) => {
+  const borderClass = variant === 'light' ? 'border-slate-200' : 'border-slate-700';
   return (
-    <div className={`px-6 py-4 border-b border-slate-700 ${className}`}>
+    <div className={`px-6 py-4 border-b ${borderClass} ${className}`}>
       {children}
     </div>
   );
@@ -35,11 +43,13 @@ export const CardHeader: React.FC<CardHeaderProps> = ({ children, className = ''
 interface CardTitleProps {
   children: React.ReactNode;
   className?: string;
+  variant?: 'dark' | 'light';
 }
 
-export const CardTitle: React.FC<CardTitleProps> = ({ children, className = '' }) => {
+export const CardTitle: React.FC<CardTitleProps> = ({ children, className = '', variant = 'dark' }) => {
+  const textClass = variant === 'light' ? 'text-slate-900' : 'text-white';
   return (
-    <h3 className={`text-lg font-semibold text-white ${className}`}>
+    <h3 className={`text-lg font-semibold ${textClass} ${className}`}>
       {children}
     </h3>
   );
@@ -74,11 +84,13 @@ export const CardContent: React.FC<CardContentProps> = ({ children, className = 
 interface CardFooterProps {
   children: React.ReactNode;
   className?: string;
+  variant?: 'dark' | 'light';
 }
 
-export const CardFooter: React.FC<CardFooterProps> = ({ children, className = '' }) => {
+export const CardFooter: React.FC<CardFooterProps> = ({ children, className = '', variant = 'dark' }) => {
+  const borderClass = variant === 'light' ? 'border-slate-200' : 'border-slate-700';
   return (
-    <div className={`px-6 py-4 border-t border-slate-700 ${className}`}>
+    <div className={`px-6 py-4 border-t ${borderClass} ${className}`}>
       {children}
     </div>
   );

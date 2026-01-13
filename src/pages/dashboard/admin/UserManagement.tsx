@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { userApi } from '../../../api/services';
 import toast from 'react-hot-toast';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface User {
   _id: string;
@@ -55,6 +56,7 @@ const UserManagement: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { notify } = useNotification();
 
   useEffect(() => {
     fetchUsers();
@@ -74,6 +76,7 @@ const UserManagement: React.FC = () => {
       setTotalPages(Math.ceil((data.total || 0) / 10));
     } catch (error) {
       toast.error('Failed to load users');
+      notify({ type: 'error', title: 'Users unavailable', message: 'Could not load users list' });
     } finally {
       setLoading(false);
     }
@@ -97,11 +100,13 @@ const UserManagement: React.FC = () => {
       const { confirmPassword, ...createData } = formData;
       await userApi.create(createData);
       toast.success('User created successfully');
+      notify({ type: 'success', title: 'User created', message: `${createData.firstName} ${createData.lastName}`.trim() });
       setShowCreateModal(false);
       resetForm();
       fetchUsers();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create user');
+      notify({ type: 'error', title: 'Create failed', message: error.response?.data?.message || 'Unable to create user' });
     } finally {
       setProcessing(false);
     }
@@ -117,11 +122,13 @@ const UserManagement: React.FC = () => {
         role: formData.role,
       });
       toast.success('User updated successfully');
+      notify({ type: 'success', title: 'User updated', message: `${formData.firstName} ${formData.lastName}`.trim() });
       setShowEditModal(false);
       resetForm();
       fetchUsers();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update user');
+      notify({ type: 'error', title: 'Update failed', message: error.response?.data?.message || 'Unable to update user' });
     } finally {
       setProcessing(false);
     }
@@ -133,11 +140,13 @@ const UserManagement: React.FC = () => {
     try {
       await userApi.delete(selectedUser._id);
       toast.success('User deleted successfully');
+      notify({ type: 'warning', title: 'User deleted', message: `${selectedUser.firstName} ${selectedUser.lastName}`.trim() });
       setShowDeleteModal(false);
       setSelectedUser(null);
       fetchUsers();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
+      notify({ type: 'error', title: 'Delete failed', message: error.response?.data?.message || 'Unable to delete user' });
     } finally {
       setProcessing(false);
     }
@@ -147,9 +156,11 @@ const UserManagement: React.FC = () => {
     try {
       await userApi.update(user._id, { isActive: !user.isActive });
       toast.success(`User ${user.isActive ? 'deactivated' : 'activated'}`);
+      notify({ type: 'info', title: user.isActive ? 'User deactivated' : 'User activated', message: `${user.firstName} ${user.lastName}`.trim() });
       fetchUsers();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update user status');
+      notify({ type: 'error', title: 'Status update failed', message: error.response?.data?.message || 'Unable to change status' });
     }
   };
 
@@ -249,7 +260,7 @@ const UserManagement: React.FC = () => {
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             <input type="text" placeholder="Search by name or email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900" />
           </div>
-          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }} className="w-full md:w-48 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900">
+          <select value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }} className="rmv-select w-full md:w-48">
             <option value="">All Roles</option>
             {ROLES.map((role) => (<option key={role.value} value={role.value}>{role.label}</option>))}
           </select>
@@ -389,7 +400,7 @@ const UserManagement: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Role *</label>
-                <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900">
+                <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="rmv-select">
                   {ROLES.map((role) => (<option key={role.value} value={role.value}>{role.label}</option>))}
                 </select>
               </div>
@@ -416,7 +427,7 @@ const UserManagement: React.FC = () => {
                 <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Last Name</label><input type="text" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900" /></div>
               </div>
               <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label><input type="email" value={formData.email} disabled className="w-full px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed" /><p className="text-xs text-slate-400 mt-1">Email cannot be changed</p></div>
-              <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Role</label><select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900">{ALL_ROLES.map((role) => (<option key={role.value} value={role.value}>{role.label}</option>))}</select></div>
+              <div><label className="block text-sm font-medium text-slate-700 mb-1.5">Role</label><select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="rmv-select">{ALL_ROLES.map((role) => (<option key={role.value} value={role.value}>{role.label}</option>))}</select></div>
             </div>
             <div className="p-5 border-t border-slate-100 flex gap-3 justify-end">
               <button onClick={() => { setShowEditModal(false); resetForm(); }} className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-xl transition-colors">Cancel</button>

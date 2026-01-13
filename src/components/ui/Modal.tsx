@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -8,6 +9,7 @@ interface ModalProps {
   children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
+  variant?: 'dark' | 'light';
 }
 
 const sizeStyles = {
@@ -25,6 +27,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
   showCloseButton = true,
+  variant = 'dark',
 }) => {
   // Close on escape key
   useEffect(() => {
@@ -47,11 +50,11 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 pointer-events-auto">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/65 backdrop-blur-md"
         onClick={onClose}
       />
 
@@ -59,21 +62,25 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={`
           relative w-full ${sizeStyles[size]}
-          bg-slate-800 border border-slate-700 rounded-xl shadow-2xl
-          transform transition-all duration-200
+          ${variant === 'light'
+            ? 'bg-white border border-slate-200'
+            : 'bg-slate-800 border border-slate-700'}
+          rounded-xl shadow-2xl transform transition-all duration-200
           max-h-[90vh] overflow-hidden flex flex-col
         `}
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+          <div className={`flex items-center justify-between px-6 py-4 border-b ${variant === 'light' ? 'border-slate-200' : 'border-slate-700'}`}>
             {title && (
-              <h2 className="text-xl font-semibold text-white">{title}</h2>
+              <h2 className={`text-xl font-semibold ${variant === 'light' ? 'text-slate-900' : 'text-white'}`}>{title}</h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+                className={`p-1 rounded-lg transition-colors ${variant === 'light'
+                  ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -82,9 +89,10 @@ export const Modal: React.FC<ModalProps> = ({
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+        <div className={`flex-1 overflow-y-auto p-6 ${variant === 'light' ? 'bg-white text-slate-900' : ''}`}>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

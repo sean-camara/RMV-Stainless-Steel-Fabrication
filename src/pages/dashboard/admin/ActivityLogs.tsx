@@ -226,7 +226,7 @@ const ActivityLogs: React.FC = () => {
           <select
             value={actionFilter}
             onChange={(e) => { setActionFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full md:w-40 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+            className="rmv-select w-full md:w-40"
           >
             <option value="">All Actions</option>
             <option value="login">Login</option>
@@ -242,7 +242,7 @@ const ActivityLogs: React.FC = () => {
           <select
             value={resourceFilter}
             onChange={(e) => { setResourceFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full md:w-40 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+            className="rmv-select w-full md:w-40"
           >
             <option value="">All Resources</option>
             <option value="user">Users</option>

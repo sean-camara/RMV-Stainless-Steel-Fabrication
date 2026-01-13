@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { appointmentApi, userApi } from '../../../api/services';
 import toast from 'react-hot-toast';
+import { Modal } from '../../../components/ui';
 
 interface Appointment {
   _id: string;
@@ -20,7 +21,7 @@ interface Appointment {
   scheduledDate: string;
   scheduledTime?: string;
   appointmentType: 'office_consultation' | 'ocular_visit';
-  status: 'pending' | 'assigned' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+  status: 'pending' | 'assigned' | 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
   interestedCategory?: string;
   description?: string;
   notes?: {
@@ -40,6 +41,29 @@ interface SalesStaff {
   lastName: string;
   email: string;
 }
+
+const CANCEL_TEMPLATES = [
+  {
+    id: 'schedule_conflict',
+    title: 'Scheduling conflict',
+    message: 'We need to cancel your appointment due to a scheduling conflict. Please choose a new time that works best for you.',
+  },
+  {
+    id: 'team_unavailable',
+    title: 'Team unavailable',
+    message: 'Our team will not be available at the scheduled time. Please rebook and we will prioritize your next slot.',
+  },
+  {
+    id: 'site_constraints',
+    title: 'Site or weather constraints',
+    message: 'We need to cancel because of site or weather constraints. Kindly rebook when conditions improve.',
+  },
+  {
+    id: 'custom',
+    title: 'Custom message',
+    message: '',
+  },
+];
 
 const AppointmentList: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -62,6 +86,11 @@ const AppointmentList: React.FC = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [agentNotes, setAgentNotes] = useState('');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [pendingCancel, setPendingCancel] = useState<Appointment | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(CANCEL_TEMPLATES[0].id);
+  const [cancelMessage, setCancelMessage] = useState(CANCEL_TEMPLATES[0].message);
+  const [cancelReason, setCancelReason] = useState(CANCEL_TEMPLATES[0].title);
 
   useEffect(() => {
     fetchAppointments();
@@ -90,12 +119,22 @@ const AppointmentList: React.FC = () => {
 
   const fetchSalesStaff = async () => {
     try {
-      const response = await userApi.getAll({ role: 'sales_staff', limit: 100 });
+      const response = await userApi.getByRole('sales_staff');
       const data = response?.data || response;
       setSalesStaffList(data.users || []);
     } catch (error) {
       console.error('Error fetching sales staff:', error);
+      toast.error('Failed to load sales staff');
     }
+  };
+
+  const openCancelModal = (appointment: Appointment) => {
+    const template = CANCEL_TEMPLATES[0];
+    setPendingCancel(appointment);
+    setSelectedTemplate(template.id);
+    setCancelMessage(template.message);
+    setCancelReason(template.title);
+    setShowCancelModal(true);
   };
 
   const handleAssign = async () => {
@@ -119,15 +158,29 @@ const AppointmentList: React.FC = () => {
     }
   };
 
-  const handleCancel = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this appointment?')) return;
-    
+  const handleCancel = async () => {
+    if (!pendingCancel) return;
+
+    const message = cancelMessage.trim();
+    if (!message) {
+      toast.error('Please enter a message to send to the customer');
+      return;
+    }
+
+    setProcessing(true);
     try {
-      await appointmentApi.cancel(id);
-      toast.success('Appointment cancelled');
+      await appointmentApi.cancel(pendingCancel._id, {
+        reason: cancelReason,
+        message,
+      });
+      toast.success('Appointment cancelled and customer notified');
       fetchAppointments();
+      setShowCancelModal(false);
+      setPendingCancel(null);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to cancel appointment');
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -156,6 +209,7 @@ const AppointmentList: React.FC = () => {
       pending: 'bg-amber-50 text-amber-700 border-amber-200',
       assigned: 'bg-blue-50 text-blue-700 border-blue-200',
       confirmed: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+      scheduled: 'bg-cyan-50 text-cyan-700 border-cyan-200',
       completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       cancelled: 'bg-red-50 text-red-700 border-red-200',
       no_show: 'bg-slate-100 text-slate-600 border-slate-200',
@@ -250,7 +304,7 @@ const AppointmentList: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="rmv-select w-full sm:w-44"
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -346,9 +400,9 @@ const AppointmentList: React.FC = () => {
                               </svg>
                             </button>
                           )}
-                          {['pending', 'assigned', 'confirmed'].includes(apt.status) && (
+                          {['pending', 'assigned', 'confirmed', 'scheduled'].includes(apt.status) && (
                             <button
-                              onClick={() => handleCancel(apt._id)}
+                              onClick={() => openCancelModal(apt)}
                               className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="Cancel"
                             >
@@ -404,6 +458,16 @@ const AppointmentList: React.FC = () => {
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                          </svg>
+                        </button>
+                      )}
+                      {['pending', 'assigned', 'confirmed', 'scheduled'].includes(apt.status) && (
+                        <button
+                          onClick={() => openCancelModal(apt)}
+                          className="p-2 text-red-400 hover:text-red-600 rounded-lg"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
                       )}
@@ -571,7 +635,7 @@ const AppointmentList: React.FC = () => {
                 <select
                   value={selectedStaffId}
                   onChange={(e) => setSelectedStaffId(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10"
+                  className="rmv-select"
                 >
                   <option value="">Choose a sales staff member</option>
                   {salesStaffList.map((staff) => (
@@ -611,6 +675,84 @@ const AppointmentList: React.FC = () => {
           </div>
         </div>
       )}
+
+      <Modal
+        isOpen={showCancelModal}
+        onClose={() => { setShowCancelModal(false); setPendingCancel(null); }}
+        title="Cancel Appointment"
+        size="lg"
+        variant="light"
+      >
+        <div className="space-y-5">
+          {pendingCancel && (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <p className="text-sm font-medium text-slate-700">Cancelling for</p>
+              <p className="text-lg font-semibold text-slate-900">{pendingCancel.customer?.firstName} {pendingCancel.customer?.lastName}</p>
+              <p className="text-sm text-slate-600">{format(new Date(pendingCancel.scheduledDate), 'MMM d, yyyy')} • {pendingCancel.scheduledTime || 'TBD'} ({pendingCancel.appointmentType === 'ocular_visit' ? 'Ocular' : 'Office'})</p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-slate-800">Pick a message to send</p>
+            <div className="space-y-2">
+              {CANCEL_TEMPLATES.map((template) => (
+                <label
+                  key={template.id}
+                  className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${
+                    selectedTemplate === template.id
+                      ? 'border-slate-900 bg-slate-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="mt-1"
+                    checked={selectedTemplate === template.id}
+                    onChange={() => {
+                      setSelectedTemplate(template.id);
+                      setCancelReason(template.title);
+                      setCancelMessage(template.id === 'custom' ? '' : template.message);
+                    }}
+                  />
+                  <div>
+                    <p className="font-semibold text-slate-900">{template.title}</p>
+                    <p className="text-sm text-slate-600">{template.message || 'Write a custom message below.'}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-800 mb-2">Message to customer</label>
+            <textarea
+              value={cancelMessage}
+              onChange={(e) => setCancelMessage(e.target.value)}
+              placeholder="Tell the customer why you’re cancelling and how to rebook..."
+              rows={4}
+              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 resize-none"
+            />
+            <p className="text-xs text-slate-500 mt-1">This message is emailed to the customer along with the cancellation notice.</p>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setShowCancelModal(false); setPendingCancel(null); }}
+              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-xl"
+              disabled={processing}
+            >
+              Keep appointment
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={processing}
+              className="px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:opacity-50"
+            >
+              {processing ? 'Cancelling...' : 'Cancel appointment'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

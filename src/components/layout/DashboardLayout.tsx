@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import type { UserRole } from '../../types';
 
 interface NavItem {
@@ -260,7 +261,10 @@ const getNavItems = (role: UserRole): NavItem[] => {
 const DashboardLayout: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
+  const { feed, unreadCount, markAllRead, removeFeedItem } = useNotification();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -303,22 +307,27 @@ const DashboardLayout: React.FC = () => {
           isCollapsed ? 'w-[72px]' : 'w-60'
         }`}
       >
-        {/* Logo */}
+        {/* Collapse Toggle (moved to top) */}
         <div className="flex items-center h-16 px-3 border-b border-slate-800">
-          <Link to="/" className="flex items-center">
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-              <img 
-                src="/1.jpg" 
-                alt="RMV" 
-                className="w-full h-full object-cover"
-              />
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`group relative flex items-center justify-center h-11 rounded-lg text-slate-300 bg-slate-800/60 hover:bg-slate-700 hover:text-white transition-all duration-150 w-full ${
+              isCollapsed ? '' : 'px-3 justify-between'
+            }`}
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            <div className="flex items-center gap-2">
+              <svg
+                className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+              {!isCollapsed && <span className="text-sm font-semibold">Collapse sidebar</span>}
             </div>
-            {!isCollapsed && (
-              <span className="ml-3 font-semibold text-white whitespace-nowrap">
-                RMV Steel
-              </span>
-            )}
-          </Link>
+          </button>
         </div>
 
         {/* Navigation */}
@@ -380,44 +389,19 @@ const DashboardLayout: React.FC = () => {
             </div>
           )}
 
-          {/* Toggle & Logout Row */}
-          <div className={`p-3 flex ${isCollapsed ? 'flex-col space-y-2' : 'items-center justify-between'}`}>
-            {/* Collapse Toggle Button */}
+          {/* Logout Row */}
+          <div className={`p-3 flex ${isCollapsed ? 'flex-col space-y-2' : 'items-center justify-end'}`}>
             <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className={`group relative flex items-center justify-center h-9 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-150 ${
-                isCollapsed ? 'w-full' : 'w-9'
-              }`}
-              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <svg 
-                className={`w-5 h-5 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              </svg>
-              
-              {isCollapsed && (
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-md shadow-lg whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
-                  Expand sidebar
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-slate-800" />
-                </div>
-              )}
-            </button>
-
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className={`group relative flex items-center justify-center h-9 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-150 ${
-                isCollapsed ? 'w-full' : 'w-9'
-              }`}
+              onClick={() => setShowLogoutConfirm(true)}
+              className={`group relative flex items-center justify-center h-10 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all duration-150 ${
+                isCollapsed ? 'w-full' : 'w-full'
+              } ${isCollapsed ? '' : 'gap-2 px-3 justify-start bg-slate-800/50 text-white hover:bg-red-500/15'}`}
               title="Sign out"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
+              {!isCollapsed && <span className="text-sm font-semibold">Logout</span>}
               
               {isCollapsed && (
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-2 bg-slate-800 text-white text-sm font-medium rounded-md shadow-lg whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
@@ -442,12 +426,46 @@ const DashboardLayout: React.FC = () => {
           
           <div className="flex items-center space-x-2">
             {/* Notifications */}
-            <button className="relative p-2 text-slate-500 hover:text-slate-700">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  const next = !showNotifications;
+                  setShowNotifications(next);
+                  if (next) markAllRead();
+                }}
+                className="relative p-2 text-slate-500 hover:text-slate-700"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                    <p className="text-sm font-semibold text-slate-900">Notifications</p>
+                    <span className="text-xs text-slate-500">{feed.length || 0} total</span>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    {feed.length === 0 ? (
+                      <div className="px-4 py-6 text-sm text-slate-500 text-center">No notifications yet</div>
+                    ) : (
+                      feed.map((item) => (
+                        <div key={item.id} className="px-4 py-3 border-b border-slate-100 last:border-b-0">
+                          {item.title && <p className="text-sm font-semibold text-slate-900">{item.title}</p>}
+                          <p className="text-sm text-slate-600">{item.message}</p>
+                          <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                            <span>{item.timestamp ? new Date(item.timestamp).toLocaleString() : ''}</span>
+                            <button onClick={() => removeFeedItem(item.id)} className="text-slate-400 hover:text-slate-600">Clear</button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Profile/Menu Button */}
             <button
@@ -530,18 +548,57 @@ const DashboardLayout: React.FC = () => {
         {/* Desktop Top Bar - Hidden on mobile */}
         <header className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-30">
           <div className="flex items-center justify-between h-16 px-6">
-            <h1 className="text-lg font-semibold text-slate-900">
-              {navItems.find(item => isActive(item.path))?.name || 'Dashboard'}
-            </h1>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border border-slate-200">
+                <img src="/1.jpg" alt="RMV" className="w-full h-full object-cover" />
+              </div>
+              <h1 className="text-lg font-semibold text-slate-900">
+                {navItems.find(item => isActive(item.path))?.name || 'Dashboard'}
+              </h1>
+            </div>
             
             <div className="flex items-center space-x-3">
               {/* Notifications */}
-              <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => {
+                    const next = !showNotifications;
+                    setShowNotifications(next);
+                    if (next) markAllRead();
+                  }}
+                  className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+                      <p className="text-sm font-semibold text-slate-900">Notifications</p>
+                      <button onClick={markAllRead} className="text-xs text-slate-500 hover:text-slate-700">Mark all read</button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {feed.length === 0 ? (
+                        <div className="px-4 py-6 text-sm text-slate-500 text-center">No notifications yet</div>
+                      ) : (
+                        feed.map((item) => (
+                          <div key={item.id} className="px-4 py-3 border-b border-slate-100 last:border-b-0">
+                            {item.title && <p className="text-sm font-semibold text-slate-900">{item.title}</p>}
+                            <p className="text-sm text-slate-600">{item.message}</p>
+                            <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                              <span>{item.timestamp ? new Date(item.timestamp).toLocaleString() : ''}</span>
+                              <button onClick={() => removeFeedItem(item.id)} className="text-slate-400 hover:text-slate-600">Clear</button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {/* Home Link */}
               <Link 
@@ -564,6 +621,32 @@ const DashboardLayout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200">
+            <div className="p-5 border-b border-slate-100">
+              <h3 className="text-lg font-semibold text-slate-900">Sign out?</h3>
+              <p className="text-sm text-slate-500 mt-1">You will be returned to the home page.</p>
+            </div>
+            <div className="p-5 flex flex-col sm:flex-row sm:justify-end gap-3">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowLogoutConfirm(false); handleLogout(); }}
+                className="px-4 py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

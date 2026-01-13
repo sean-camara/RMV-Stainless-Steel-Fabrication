@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { appointmentApi } from '../../../api/services';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface SiteAddress {
   street?: string;
@@ -37,10 +38,59 @@ const MyAppointments: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('all');
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+  const detailsContentRef = useRef<HTMLDivElement | null>(null);
+  const { notify } = useNotification();
+  const seenNotifications = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAppointments();
   }, []);
+
+  useEffect(() => {
+    appointments.forEach((appt) => {
+      const key = `${appt._id}-${appt.status}`;
+      if (seenNotifications.current.has(key)) return;
+
+      if (appt.status === 'cancelled') {
+        notify({
+          type: 'warning',
+          title: 'Appointment cancelled',
+          message: `Your appointment ${appt._id} was cancelled by our team.`,
+          persist: true,
+        });
+        seenNotifications.current.add(key);
+      } else if (appt.status === 'scheduled' || appt.status === 'confirmed') {
+        notify({
+          type: 'success',
+          title: 'Appointment accepted',
+          message: `Your appointment ${appt._id} has been scheduled.`,
+          persist: true,
+        });
+        seenNotifications.current.add(key);
+      }
+    });
+  }, [appointments, notify]);
+
+  useEffect(() => {
+    const el = detailsContentRef.current;
+    if (!el || !showDetailModal) return;
+
+    const updateHint = () => {
+      const remaining = el.scrollHeight - el.clientHeight - el.scrollTop;
+      setShowScrollHint(remaining > 12);
+    };
+
+    updateHint();
+    el.addEventListener('scroll', updateHint);
+    return () => el.removeEventListener('scroll', updateHint);
+  }, [showDetailModal, selectedAppointment]);
+
+  const scrollDetails = () => {
+    const el = detailsContentRef.current;
+    if (!el) return;
+    el.scrollBy({ top: el.clientHeight * 0.75, behavior: 'smooth' });
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -56,6 +106,7 @@ const MyAppointments: React.FC = () => {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-amber-50 text-amber-700 border-amber-200',
+      scheduled: 'bg-cyan-50 text-cyan-700 border-cyan-200',
       confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       completed: 'bg-slate-100 text-slate-700 border-slate-200',
       cancelled: 'bg-red-50 text-red-700 border-red-200',
@@ -73,6 +124,7 @@ const MyAppointments: React.FC = () => {
           </svg>
         );
       case 'confirmed':
+      case 'scheduled':
         return (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -426,7 +478,7 @@ const MyAppointments: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-4 md:p-6 overflow-y-auto">
+            <div ref={detailsContentRef} className="relative p-4 md:p-6 overflow-y-auto max-h-[70vh] scrollbar-light">
               {/* Date & Time */}
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-slate-100 rounded-xl flex flex-col items-center justify-center">
@@ -570,6 +622,24 @@ const MyAppointments: React.FC = () => {
                     </li>
                   </ul>
                 </div>
+              )}
+
+              {showScrollHint && (
+                <>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={scrollDetails}
+                      className="pointer-events-auto inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800"
+                    >
+                      Scroll to see more
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </>
               )}
             </div>
 

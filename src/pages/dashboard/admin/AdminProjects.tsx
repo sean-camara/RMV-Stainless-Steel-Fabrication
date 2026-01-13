@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectApi } from '../../../api/services';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface Project {
   _id: string;
@@ -30,6 +31,7 @@ const AdminProjects: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const { notify } = useNotification();
 
   useEffect(() => {
     fetchProjects();
@@ -48,6 +50,7 @@ const AdminProjects: React.FC = () => {
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      notify({ type: 'error', title: 'Projects unavailable', message: 'Could not load projects list' });
     } finally {
       setIsLoading(false);
     }
@@ -188,7 +191,7 @@ const AdminProjects: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="rmv-select w-full sm:w-48"
           >
             <option value="">All Statuses</option>
             <option value="consultation">Consultation</option>

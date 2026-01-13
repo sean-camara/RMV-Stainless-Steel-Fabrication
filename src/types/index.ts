@@ -8,6 +8,12 @@ export interface User {
   lastName: string;
   phone?: string;
   address?: Address;
+  profile?: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    address?: Address;
+  };
   avatar?: string;
   isVerified: boolean;
   isActive: boolean;
@@ -79,6 +85,7 @@ export interface Appointment {
   agentNotes?: string; // Shorthand
   convertedToProject?: string;
   canBeCancelled: boolean;
+  travelFee?: TravelFee;
   createdAt: string;
 }
 
@@ -95,6 +102,19 @@ export interface TimeSlot {
   start: string;
   end: string;
   isAvailable: boolean;
+}
+
+export type TravelFeeStatus = 'not_required' | 'pending' | 'collected' | 'verified';
+
+export interface TravelFee {
+  isRequired?: boolean;
+  amount?: number;
+  status?: TravelFeeStatus;
+  collectedBy?: User;
+  collectedAt?: string;
+  verifiedBy?: User;
+  verifiedAt?: string;
+  notes?: string;
 }
 
 // Project types
@@ -162,6 +182,7 @@ export type ProjectStatus =
   | 'fabrication_done'
   | 'ready_for_installation'
   | 'ready_for_pickup'
+  | 'released'
   | 'in_installation'
   | 'pending_final_payment'
   | 'completed'
@@ -258,6 +279,7 @@ export interface PaymentStages {
 export interface FabricationData {
   startedAt?: string;
   completedAt?: string;
+   releasedAt?: string;
   progress: number;
   photos: FileUpload[];
   notes: Array<{

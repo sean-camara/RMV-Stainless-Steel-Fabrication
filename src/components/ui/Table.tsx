@@ -1,16 +1,24 @@
-import React from 'react';
+import React, { createContext, useContext } from 'react';
+
+type TableVariant = 'dark' | 'light';
+
+const TableVariantContext = createContext<TableVariant>('dark');
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 
 interface TableProps {
   children: React.ReactNode;
   className?: string;
+  variant?: TableVariant;
 }
 
-export const Table: React.FC<TableProps> = ({ children, className = '' }) => {
+export const Table: React.FC<TableProps> = ({ children, className = '', variant = 'dark' }) => {
+  const borderClass = variant === 'light' ? 'border-slate-200' : 'border-slate-700';
   return (
-    <div className={`overflow-x-auto rounded-lg border border-slate-700 ${className}`}>
-      <table className="w-full text-left">{children}</table>
-    </div>
+    <TableVariantContext.Provider value={variant}>
+      <div className={`overflow-x-auto rounded-lg border ${borderClass} ${className}`}>
+        <table className="w-full text-left">{children}</table>
+      </div>
+    </TableVariantContext.Provider>
   );
 };
 
@@ -19,9 +27,12 @@ interface TableHeaderProps {
 }
 
 export const TableHeader: React.FC<TableHeaderProps> = ({ children }) => {
-  return (
-    <thead className="bg-slate-700/50 border-b border-slate-700">{children}</thead>
-  );
+  const variant = useContext(TableVariantContext);
+  const headerClass =
+    variant === 'light'
+      ? 'bg-slate-50 border-b border-slate-200'
+      : 'bg-slate-700/50 border-b border-slate-700';
+  return <thead className={headerClass}>{children}</thead>;
 };
 
 interface TableBodyProps {
@@ -29,7 +40,9 @@ interface TableBodyProps {
 }
 
 export const TableBody: React.FC<TableBodyProps> = ({ children }) => {
-  return <tbody className="divide-y divide-slate-700">{children}</tbody>;
+  const variant = useContext(TableVariantContext);
+  const divideClass = variant === 'light' ? 'divide-slate-100' : 'divide-slate-700';
+  return <tbody className={`divide-y ${divideClass}`}>{children}</tbody>;
 };
 
 interface TableRowProps {
@@ -39,13 +52,14 @@ interface TableRowProps {
 }
 
 export const TableRow: React.FC<TableRowProps> = ({ children, onClick, className = '' }) => {
+  const variant = useContext(TableVariantContext);
+  const baseClass =
+    variant === 'light'
+      ? 'bg-white hover:bg-slate-50'
+      : 'bg-slate-800 hover:bg-slate-700/50';
   return (
     <tr
-      className={`
-        bg-slate-800 hover:bg-slate-700/50 transition-colors
-        ${onClick ? 'cursor-pointer' : ''}
-        ${className}
-      `}
+      className={`${baseClass} transition-colors ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
@@ -68,11 +82,20 @@ export const TableHead: React.FC<TableHeadProps> = ({
   onSort,
   className = '',
 }) => {
+  const variant = useContext(TableVariantContext);
+  const textClass = variant === 'light' ? 'text-slate-600' : 'text-slate-300';
+  const hoverClass = sortable
+    ? variant === 'light'
+      ? 'cursor-pointer hover:text-slate-800 select-none'
+      : 'cursor-pointer hover:text-white select-none'
+    : '';
+
   return (
     <th
       className={`
-        px-4 py-3 text-sm font-semibold text-slate-300 uppercase tracking-wider
-        ${sortable ? 'cursor-pointer hover:text-white select-none' : ''}
+        px-4 py-3 text-sm font-semibold uppercase tracking-wider
+        ${textClass}
+        ${hoverClass}
         ${className}
       `}
       onClick={sortable ? onSort : undefined}
@@ -80,7 +103,7 @@ export const TableHead: React.FC<TableHeadProps> = ({
       <div className="flex items-center gap-2">
         {children}
         {sortable && (
-          <span className="text-slate-500">
+          <span className={variant === 'light' ? 'text-slate-400' : 'text-slate-500'}>
             {sortDirection === 'asc' ? (
               <ChevronUp className="w-4 h-4" />
             ) : sortDirection === 'desc' ? (
@@ -101,9 +124,9 @@ interface TableCellProps {
 }
 
 export const TableCell: React.FC<TableCellProps> = ({ children, className = '' }) => {
-  return (
-    <td className={`px-4 py-3 text-sm text-slate-300 ${className}`}>{children}</td>
-  );
+  const variant = useContext(TableVariantContext);
+  const textClass = variant === 'light' ? 'text-slate-700' : 'text-slate-300';
+  return <td className={`px-4 py-3 text-sm ${textClass} ${className}`}>{children}</td>;
 };
 
 // Empty state for tables
@@ -118,10 +141,12 @@ export const TableEmpty: React.FC<TableEmptyProps> = ({
   colSpan,
   icon,
 }) => {
+  const variant = useContext(TableVariantContext);
+  const textClass = variant === 'light' ? 'text-slate-500' : 'text-slate-400';
   return (
     <tr>
       <td colSpan={colSpan} className="px-4 py-12 text-center">
-        <div className="flex flex-col items-center text-slate-400">
+        <div className={`flex flex-col items-center ${textClass}`}>
           {icon && <div className="mb-3">{icon}</div>}
           <p>{message}</p>
         </div>
@@ -144,6 +169,11 @@ export const Pagination: React.FC<PaginationProps> = ({
   onPageChange,
   className = '',
 }) => {
+  const variant = useContext(TableVariantContext);
+  const idleText = variant === 'light' ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white';
+  const activeBg = variant === 'light' ? 'bg-cyan-600 text-white' : 'bg-cyan-500 text-white';
+  const hoverBg = variant === 'light' ? 'hover:bg-slate-100' : 'hover:bg-slate-700';
+
   const pages = [];
   const maxVisiblePages = 5;
 
@@ -163,7 +193,7 @@ export const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-3 py-1 text-sm text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`px-3 py-1 text-sm ${idleText} disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         Previous
       </button>
@@ -172,7 +202,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <>
           <button
             onClick={() => onPageChange(1)}
-            className="px-3 py-1 text-sm text-slate-400 hover:text-white hover:bg-slate-700 rounded"
+            className={`px-3 py-1 text-sm rounded ${idleText} ${hoverBg}`}
           >
             1
           </button>
@@ -188,8 +218,8 @@ export const Pagination: React.FC<PaginationProps> = ({
             px-3 py-1 text-sm rounded
             ${
               page === currentPage
-                ? 'bg-cyan-500 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                ? activeBg
+                : `${idleText} ${hoverBg}`
             }
           `}
         >
@@ -202,7 +232,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           {endPage < totalPages - 1 && <span className="text-slate-500">...</span>}
           <button
             onClick={() => onPageChange(totalPages)}
-            className="px-3 py-1 text-sm text-slate-400 hover:text-white hover:bg-slate-700 rounded"
+            className={`px-3 py-1 text-sm rounded ${idleText} ${hoverBg}`}
           >
             {totalPages}
           </button>
@@ -212,7 +242,7 @@ export const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-3 py-1 text-sm text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`px-3 py-1 text-sm ${idleText} disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         Next
       </button>

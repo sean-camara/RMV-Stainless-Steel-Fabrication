@@ -1,16 +1,20 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonBaseProps = React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+interface ButtonProps extends ButtonBaseProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   icon?: React.ReactNode;
+  as?: React.ElementType;
+  to?: string; // allow Link-like target
   children: React.ReactNode;
 }
 
 const variantStyles = {
-  primary: 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg shadow-cyan-500/20',
+  primary: 'bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/30 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-900',
   secondary: 'bg-slate-700 hover:bg-slate-600 text-white',
   outline: 'border-2 border-cyan-500 text-cyan-400 hover:bg-cyan-500/10',
   ghost: 'text-slate-300 hover:text-white hover:bg-slate-700',
@@ -31,10 +35,14 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   disabled,
   className = '',
+  as: Component = 'button',
+  to,
   ...props
 }) => {
+  const isNativeButton = Component === 'button' || Component === 'input';
+
   return (
-    <button
+    <Component
       className={`
         inline-flex items-center justify-center gap-2 font-medium rounded-lg
         transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
@@ -42,7 +50,8 @@ export const Button: React.FC<ButtonProps> = ({
         ${sizeStyles[size]}
         ${className}
       `}
-      disabled={disabled || loading}
+      {...(isNativeButton ? { disabled: disabled || loading } : {})}
+      {...(to ? { to } : {})}
       {...props}
     >
       {loading ? (
@@ -51,6 +60,6 @@ export const Button: React.FC<ButtonProps> = ({
         icon
       ) : null}
       {children}
-    </button>
+    </Component>
   );
 };

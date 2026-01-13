@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { paymentApi } from '../../../api/services';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface Payment {
   _id: string;
@@ -51,6 +52,7 @@ const MyPayments: React.FC = () => {
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { notify } = useNotification();
 
   useEffect(() => {
     fetchPayments();
@@ -62,6 +64,7 @@ const MyPayments: React.FC = () => {
       setPayments(response.data?.payments || []);
     } catch (error) {
       console.error('Failed to load payments:', error);
+      notify({ type: 'error', title: 'Payments unavailable', message: 'Could not load your payments' });
     } finally {
       setLoading(false);
     }
@@ -74,12 +77,13 @@ const MyPayments: React.FC = () => {
       formData.append('proof', file);
       await paymentApi.uploadProof(paymentId, formData);
       setUploadSuccess(paymentId);
+      notify({ type: 'success', title: 'Proof uploaded', message: 'We will verify your payment shortly.' });
       setTimeout(() => setUploadSuccess(null), 3000);
       fetchPayments();
       setShowPaymentModal(false);
     } catch (error) {
       console.error('Failed to upload proof:', error);
-      alert('Failed to upload proof of payment. Please try again.');
+      notify({ type: 'error', title: 'Upload failed', message: 'Could not upload proof. Please try again.' });
     } finally {
       setUploadingId(null);
     }

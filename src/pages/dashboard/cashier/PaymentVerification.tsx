@@ -14,6 +14,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { paymentApi } from '../../../api/services';
+import { useNotification } from '../../../contexts/NotificationContext';
 import {
   Card,
   CardContent,
@@ -53,6 +54,7 @@ const PaymentVerification: React.FC = () => {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const { notify } = useNotification();
 
   useEffect(() => {
     fetchPayments();
@@ -70,6 +72,7 @@ const PaymentVerification: React.FC = () => {
       setTotalPages(Math.ceil((response.data.total || 0) / 10));
     } catch (error) {
       toast.error('Failed to load payments');
+      notify({ type: 'error', title: 'Payments unavailable', message: 'Could not load payments list' });
     } finally {
       setLoading(false);
     }
@@ -85,11 +88,13 @@ const PaymentVerification: React.FC = () => {
         notes: verificationNotes,
       });
       toast.success('Payment verified successfully');
+      notify({ type: 'success', title: 'Payment verified', message: `${selectedPayment.customerId?.firstName || 'Customer'} • ${getPaymentStageLabel(selectedPayment.stage)}` });
       setShowDetails(false);
       setVerificationNotes('');
       fetchPayments();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to verify payment');
+      notify({ type: 'error', title: 'Verification failed', message: error.response?.data?.message || 'Unable to verify payment' });
     } finally {
       setProcessing(false);
     }
@@ -107,11 +112,13 @@ const PaymentVerification: React.FC = () => {
     try {
       await paymentApi.reject(selectedPayment._id, verificationNotes);
       toast.success('Payment rejected');
+      notify({ type: 'warning', title: 'Payment rejected', message: `${selectedPayment.customerId?.firstName || 'Customer'} • ${getPaymentStageLabel(selectedPayment.stage)}` });
       setShowDetails(false);
       setVerificationNotes('');
       fetchPayments();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to reject payment');
+      notify({ type: 'error', title: 'Rejection failed', message: error.response?.data?.message || 'Unable to reject payment' });
     } finally {
       setProcessing(false);
     }

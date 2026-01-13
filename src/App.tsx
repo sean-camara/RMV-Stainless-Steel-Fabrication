@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { ProtectedRoute, PublicRoute, getDashboardPath } from './components/ProtectedRoute';
 import { LandingLayout, DashboardLayout, CustomerLayout } from './components/layout';
 import { useAuth } from './contexts/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Landing pages
 import { Home, About, Services, Portfolio } from './pages/landing';
@@ -14,9 +16,9 @@ import { Login, Register, VerifyEmail, ForgotPassword, ResetPassword } from './p
 // Dashboard pages
 import { CustomerDashboard, BookAppointment, MyAppointments, MyProjects, MyPayments } from './pages/dashboard/customer';
 import { AgentDashboard, AppointmentList } from './pages/dashboard/agent';
-import { SalesDashboard, ProjectList as SalesProjectList } from './pages/dashboard/sales';
+import { SalesDashboard, SalesAppointments, ProjectList as SalesProjectList, TravelFees as SalesTravelFees } from './pages/dashboard/sales';
 import { EngineerDashboard, BlueprintManagement } from './pages/dashboard/engineer';
-import { CashierDashboard, PaymentVerification } from './pages/dashboard/cashier';
+import { CashierDashboard, PaymentVerification, TravelFees as CashierTravelFees } from './pages/dashboard/cashier';
 import { FabricationDashboard, FabricationQueue } from './pages/dashboard/fabrication';
 import { AdminDashboard, UserManagement, ActivityLogs, AdminAppointments, AdminProjects, AdminPayments, AdminReports } from './pages/dashboard/admin';
 import { Profile } from './pages/dashboard/shared';
@@ -35,7 +37,9 @@ const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <NotificationProvider>
+          <ErrorBoundary>
+            <Routes>
           {/* Landing pages with public layout */}
           <Route element={<LandingLayout />}>
             <Route path="/" element={<Home />} />
@@ -124,10 +128,11 @@ const App: React.FC = () => {
             }
           >
             <Route index element={<SalesDashboard />} />
-            <Route path="appointments" element={<SalesProjectList />} />
-            <Route path="appointments/:id" element={<SalesProjectList />} />
+            <Route path="appointments" element={<SalesAppointments />} />
+            <Route path="appointments/:id" element={<SalesAppointments />} />
             <Route path="projects" element={<SalesProjectList />} />
             <Route path="projects/:id" element={<SalesProjectList />} />
+            <Route path="travel-fees" element={<SalesTravelFees />} />
           </Route>
 
           {/* Engineer Dashboard */}
@@ -158,6 +163,7 @@ const App: React.FC = () => {
             <Route path="pending" element={<PaymentVerification />} />
             <Route path="payments" element={<PaymentVerification />} />
             <Route path="payments/:id" element={<PaymentVerification />} />
+            <Route path="travel-fees" element={<CashierTravelFees />} />
           </Route>
 
           {/* Fabrication Dashboard */}
@@ -209,6 +215,8 @@ const App: React.FC = () => {
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+          </ErrorBoundary>
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

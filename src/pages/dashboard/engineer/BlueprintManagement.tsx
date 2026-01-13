@@ -34,6 +34,7 @@ import {
 } from '../../../components/ui';
 import { Project } from '../../../types';
 import toast from 'react-hot-toast';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 const BlueprintManagement: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -44,6 +45,7 @@ const BlueprintManagement: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [blueprintFile, setBlueprintFile] = useState<File | null>(null);
   const [blueprintNotes, setBlueprintNotes] = useState('');
+  const { notify } = useNotification();
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('blueprint_pending');
@@ -62,6 +64,7 @@ const BlueprintManagement: React.FC = () => {
       setProjects(response.data.projects || []);
     } catch (error) {
       toast.error('Failed to load projects');
+      notify({ type: 'error', title: 'Blueprints unavailable', message: 'Could not load projects' });
     } finally {
       setLoading(false);
     }
@@ -81,12 +84,14 @@ const BlueprintManagement: React.FC = () => {
 
       await projectApi.uploadBlueprint(selectedProject._id, formData);
       toast.success('Blueprint uploaded successfully!');
+      notify({ type: 'success', title: 'Blueprint uploaded', message: selectedProject.projectName || 'Project' });
       setShowUploadModal(false);
       setBlueprintFile(null);
       setBlueprintNotes('');
       fetchProjects();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to upload blueprint');
+      notify({ type: 'error', title: 'Upload failed', message: error.response?.data?.message || 'Unable to upload blueprint' });
     } finally {
       setUploading(false);
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { paymentApi } from '../../../api/services';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface Payment {
   _id: string;
@@ -31,6 +32,7 @@ const AdminPayments: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [stageFilter, setStageFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const { notify } = useNotification();
 
   useEffect(() => {
     fetchPayments();
@@ -50,6 +52,7 @@ const AdminPayments: React.FC = () => {
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching payments:', error);
+      notify({ type: 'error', title: 'Payments unavailable', message: 'Could not load payments list' });
     } finally {
       setIsLoading(false);
     }
@@ -207,7 +210,7 @@ const AdminPayments: React.FC = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="rmv-select w-full sm:w-44"
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
@@ -218,7 +221,7 @@ const AdminPayments: React.FC = () => {
           <select
             value={stageFilter}
             onChange={(e) => setStageFilter(e.target.value)}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+            className="rmv-select w-full sm:w-44"
           >
             <option value="">All Stages</option>
             <option value="downpayment">Downpayment</option>

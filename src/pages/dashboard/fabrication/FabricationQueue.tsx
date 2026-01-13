@@ -10,6 +10,8 @@ import {
   Filter,
   Search,
   Package,
+  PackageCheck,
+  Truck,
 } from 'lucide-react';
 import { projectApi } from '../../../api/services';
 import {
@@ -35,6 +37,7 @@ import {
 } from '../../../components/ui';
 import { Project } from '../../../types';
 import toast from 'react-hot-toast';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 const FabricationQueue: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -42,9 +45,11 @@ const FabricationQueue: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'start' | 'complete' | null>(null);
+  const [confirmAction, setConfirmAction] = useState<'start' | 'complete' | 'ready' | 'release' | null>(null);
   const [processing, setProcessing] = useState(false);
   const [fabricationNotes, setFabricationNotes] = useState('');
+  const [progressValue, setProgressValue] = useState(0);
+  const { notify } = useNotification();
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('');
@@ -57,18 +62,31 @@ const FabricationQueue: React.FC = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      // Fetch projects in fabrication-related statuses
-      const response = await projectApi.getAll({
-        status: statusFilter || undefined,
+      let data: any;
+      try {
+        const response = await projectApi.getFabrication();
+        data = response?.data || response;
+      } catch (err) {
+        const fallback = await projectApi.getAll({ status: statusFilter || undefined });
+        data = fallback?.data || fallback;
+      }
+      const fabricationStatuses = [
+        'dp_pending',
+        'pending_initial_payment',
+        'pending_midpoint_payment',
+        'midpoint_payment_verified',
+        'in_fabrication',
+        'fabrication_done',
+        'ready_for_pickup',
+      ];
+      const list: Project[] = (data.projects || []).filter((p: Project) => {
+        if (statusFilter) return p.status === statusFilter;
+        return fabricationStatuses.includes(p.status);
       });
-      // Filter for fabrication-relevant statuses
-      const fabricationStatuses = ['dp_pending', 'in_fabrication', 'fabrication_done', 'ready_for_pickup'];
-      const filteredProjects = response.data.projects?.filter((p: Project) =>
-        fabricationStatuses.includes(p.status) || !statusFilter
-      ) || [];
-      setProjects(filteredProjects);
+      setProjects(list);
     } catch (error) {
       toast.error('Failed to load projects');
+      notify({ type: 'error', title: 'Fabrication queue unavailable', message: 'Could not load projects' });
     } finally {
       setLoading(false);
     }
@@ -84,12 +102,14 @@ const FabricationQueue: React.FC = () => {
         notes: fabricationNotes,
       });
       toast.success('Fabrication started');
+      notify({ type: 'success', title: 'Fabrication started', message: selectedProject.projectName || 'Project' });
       setShowConfirm(false);
       setShowDetails(false);
       setFabricationNotes('');
       fetchProjects();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update status');
+      notify({ type: 'error', title: 'Fabrication start failed', message: error.response?.data?.message || 'Unable to update status' });
     } finally {
       setProcessing(false);
     }
@@ -105,12 +125,77 @@ const FabricationQueue: React.FC = () => {
         notes: fabricationNotes,
       });
       toast.success('Fabrication marked as complete');
+      notify({ type: 'success', title: 'Fabrication complete', message: selectedProject.projectName || 'Project' });
       setShowConfirm(false);
       setShowDetails(false);
       setFabricationNotes('');
       fetchProjects();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update status');
+      notify({ type: 'error', title: 'Completion failed', message: error.response?.data?.message || 'Unable to update status' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleReadyForPickup = async () => {
+    if (!selectedProject) return;
+
+    setProcessing(true);
+    try {
+      await projectApi.updateStatus(selectedProject._id, {
+        status: 'ready_for_pickup',
+        notes: fabricationNotes,
+      });
+      toast.success('Marked as ready for pickup');
+      notify({ type: 'success', title: 'Ready for pickup', message: selectedProject.projectName || 'Project' });
+      setShowConfirm(false);
+      setShowDetails(false);
+      setFabricationNotes('');
+      fetchProjects();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+      notify({ type: 'error', title: 'Ready-for-pickup failed', message: error.response?.data?.message || 'Unable to update status' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleReleaseProject = async () => {
+    if (!selectedProject) return;
+
+    setProcessing(true);
+    try {
+      await projectApi.updateStatus(selectedProject._id, {
+        status: 'released',
+        notes: fabricationNotes,
+      });
+      toast.success('Project released');
+      notify({ type: 'success', title: 'Project released', message: selectedProject.projectName || 'Project' });
+      setShowConfirm(false);
+      setShowDetails(false);
+      setFabricationNotes('');
+      fetchProjects();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update status');
+      notify({ type: 'error', title: 'Release failed', message: error.response?.data?.message || 'Unable to update status' });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleUpdateProgress = async () => {
+    if (!selectedProject) return;
+
+    setProcessing(true);
+    try {
+      await projectApi.updateFabricationProgress(selectedProject._id, Number(progressValue), fabricationNotes);
+      toast.success('Progress updated');
+      notify({ type: 'success', title: 'Progress updated', message: `${progressValue}% • ${selectedProject.projectName || 'Project'}` });
+      fetchProjects();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to update progress');
+      notify({ type: 'error', title: 'Progress update failed', message: error.response?.data?.message || 'Unable to update progress' });
     } finally {
       setProcessing(false);
     }
@@ -127,7 +212,7 @@ const FabricationQueue: React.FC = () => {
   });
 
   // Stats
-  const inQueue = projects.filter((p) => p.status === 'dp_pending').length;
+  const inQueue = projects.filter((p) => ['dp_pending', 'pending_initial_payment'].includes(p.status)).length;
   const inProgress = projects.filter((p) => p.status === 'in_fabrication').length;
   const completed = projects.filter((p) => p.status === 'fabrication_done').length;
   const readyForPickup = projects.filter((p) => p.status === 'ready_for_pickup').length;
@@ -214,9 +299,11 @@ const FabricationQueue: React.FC = () => {
                 options={[
                   { value: '', label: 'All Status' },
                   { value: 'dp_pending', label: 'Awaiting DP' },
+                  { value: 'pending_initial_payment', label: 'Awaiting DP (alias)' },
                   { value: 'in_fabrication', label: 'In Fabrication' },
                   { value: 'fabrication_done', label: 'Fabrication Done' },
                   { value: 'ready_for_pickup', label: 'Ready for Pickup' },
+                  { value: 'released', label: 'Released' },
                 ]}
               />
             </div>
@@ -284,17 +371,19 @@ const FabricationQueue: React.FC = () => {
                           size="sm"
                           onClick={() => {
                             setSelectedProject(project);
+                            setProgressValue(project.fabrication?.progress || 0);
                             setShowDetails(true);
                           }}
                           icon={<Eye className="w-4 h-4" />}
                         >
                           View
                         </Button>
-                        {project.status === 'dp_pending' && (
+                        {['dp_pending', 'pending_initial_payment'].includes(project.status) && (
                           <Button
                             size="sm"
                             onClick={() => {
                               setSelectedProject(project);
+                              setProgressValue(project.fabrication?.progress || 0);
                               setConfirmAction('start');
                               setShowConfirm(true);
                             }}
@@ -309,12 +398,42 @@ const FabricationQueue: React.FC = () => {
                             variant="secondary"
                             onClick={() => {
                               setSelectedProject(project);
+                              setProgressValue(project.fabrication?.progress || 0);
                               setConfirmAction('complete');
                               setShowConfirm(true);
                             }}
                             icon={<CheckCircle className="w-4 h-4" />}
                           >
                             Complete
+                          </Button>
+                        )}
+                        {project.status === 'fabrication_done' && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setProgressValue(project.fabrication?.progress || 100);
+                              setConfirmAction('ready');
+                              setShowConfirm(true);
+                            }}
+                            icon={<PackageCheck className="w-4 h-4" />}
+                          >
+                            Ready for Pickup
+                          </Button>
+                        )}
+                        {project.status === 'ready_for_pickup' && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedProject(project);
+                              setProgressValue(project.fabrication?.progress || 100);
+                              setConfirmAction('release');
+                              setShowConfirm(true);
+                            }}
+                            icon={<Truck className="w-4 h-4" />}
+                          >
+                            Release
                           </Button>
                         )}
                       </div>
@@ -390,6 +509,37 @@ const FabricationQueue: React.FC = () => {
               </div>
             )}
 
+            {/* Fabrication Progress */}
+            <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-white">Progress</h4>
+                <span className="text-sm text-slate-300">{selectedProject.fabrication?.progress ?? 0}%</span>
+              </div>
+              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-cyan-400"
+                  style={{ width: `${Math.min(selectedProject.fabrication?.progress || 0, 100)}%` }}
+                />
+              </div>
+              {['in_fabrication', 'fabrication_done'].includes(selectedProject.status) && (
+                <div className="grid md:grid-cols-2 gap-3">
+                  <Input
+                    label="Set progress (%)"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={progressValue}
+                    onChange={(e) => setProgressValue(Number(e.target.value))}
+                  />
+                  <div className="flex md:items-end justify-end">
+                    <Button onClick={handleUpdateProgress} loading={processing}>
+                      Update Progress
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Quotation */}
             {selectedProject.quotation && (
               <div className="bg-slate-700/30 p-4 rounded-lg">
@@ -418,7 +568,7 @@ const FabricationQueue: React.FC = () => {
             )}
 
             {/* Fabrication Notes Input */}
-            {['dp_pending', 'in_fabrication'].includes(selectedProject.status) && (
+            {['dp_pending', 'pending_initial_payment', 'in_fabrication', 'fabrication_done', 'ready_for_pickup'].includes(selectedProject.status) && (
               <Textarea
                 label="Fabrication Notes"
                 placeholder="Add notes about the fabrication process..."
@@ -430,7 +580,7 @@ const FabricationQueue: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-3 justify-end border-t border-slate-700 pt-4">
-              {selectedProject.status === 'dp_pending' && (
+              {['dp_pending', 'pending_initial_payment'].includes(selectedProject.status) && (
                 <Button
                   onClick={() => {
                     setConfirmAction('start');
@@ -452,6 +602,29 @@ const FabricationQueue: React.FC = () => {
                   Mark as Complete
                 </Button>
               )}
+              {selectedProject.status === 'fabrication_done' && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setConfirmAction('ready');
+                    setShowConfirm(true);
+                  }}
+                  icon={<PackageCheck className="w-4 h-4" />}
+                >
+                  Ready for Pickup
+                </Button>
+              )}
+              {selectedProject.status === 'ready_for_pickup' && (
+                <Button
+                  onClick={() => {
+                    setConfirmAction('release');
+                    setShowConfirm(true);
+                  }}
+                  icon={<Truck className="w-4 h-4" />}
+                >
+                  Release Project
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -464,14 +637,42 @@ const FabricationQueue: React.FC = () => {
           setShowConfirm(false);
           setConfirmAction(null);
         }}
-        onConfirm={confirmAction === 'start' ? handleStartFabrication : handleCompleteFabrication}
-        title={confirmAction === 'start' ? 'Start Fabrication' : 'Complete Fabrication'}
+        onConfirm={
+          confirmAction === 'start'
+            ? handleStartFabrication
+            : confirmAction === 'complete'
+              ? handleCompleteFabrication
+              : confirmAction === 'ready'
+                ? handleReadyForPickup
+                : handleReleaseProject
+        }
+        title={
+          confirmAction === 'start'
+            ? 'Start Fabrication'
+            : confirmAction === 'complete'
+              ? 'Complete Fabrication'
+              : confirmAction === 'ready'
+                ? 'Mark Ready for Pickup'
+                : 'Release Project'
+        }
         message={
           confirmAction === 'start'
-            ? 'Are you sure you want to start fabrication for this project?'
-            : 'Are you sure you want to mark this project as fabrication complete?'
+            ? 'Start fabrication for this project?'
+            : confirmAction === 'complete'
+              ? 'Mark this project as fabrication complete?'
+              : confirmAction === 'ready'
+                ? 'Confirm this project is ready for pickup?'
+                : 'Release this project to the customer?'
         }
-        confirmText={confirmAction === 'start' ? 'Start Fabrication' : 'Mark Complete'}
+        confirmText={
+          confirmAction === 'start'
+            ? 'Start Fabrication'
+            : confirmAction === 'complete'
+              ? 'Mark Complete'
+              : confirmAction === 'ready'
+                ? 'Ready for Pickup'
+                : 'Release'
+        }
         variant="info"
         loading={processing}
       />

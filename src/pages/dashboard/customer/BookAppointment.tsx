@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { appointmentApi } from '../../../api/services';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface ExistingAppointment {
   _id: string;
@@ -31,6 +32,7 @@ interface SiteAddress {
 
 const BookAppointment: React.FC = () => {
   const navigate = useNavigate();
+  const { notify } = useNotification();
   const [step, setStep] = useState(1);
   const [appointmentType, setAppointmentType] = useState<'office_consultation' | 'ocular_visit'>('office_consultation');
   const [projectInterest, setProjectInterest] = useState('');
@@ -51,6 +53,11 @@ const BookAppointment: React.FC = () => {
   const [showTravelFeeInfo, setShowTravelFeeInfo] = useState(false);
   const [existingAppointment, setExistingAppointment] = useState<ExistingAppointment | null>(null);
   const [checkingAppointment, setCheckingAppointment] = useState(true);
+  const [availableTimes, setAvailableTimes] = useState<string[]>(TIME_SLOTS.map((s) => s.time));
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState('');
+  const [availableStaff, setAvailableStaff] = useState<string[]>([]);
+  const [availableStaffByTime, setAvailableStaffByTime] = useState<Record<string, string[]>>({});
 
   // Check for existing active appointments
   useEffect(() => {
@@ -75,6 +82,77 @@ const BookAppointment: React.FC = () => {
     };
     checkExistingAppointment();
   }, []);
+
+  // Load availability for the selected date
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    let cancelled = false;
+    const loadSlots = async () => {
+      setLoadingSlots(true);
+      setSlotsError('');
+      try {
+        const response = await appointmentApi.getSlots(selectedDate);
+        if (cancelled) return;
+
+        const availability = response.data?.availability;
+        if (availability && Array.isArray(availability)) {
+          const times = new Set<string>();
+          const staffWithSlots: string[] = [];
+          const staffByTime: Record<string, Set<string>> = {};
+          availability.forEach((staff: any) => {
+            (staff.slots || []).forEach((slot: any) => {
+              if (slot.isAvailable && slot.start) {
+                const start = new Date(slot.start);
+                const hh = String(start.getHours()).padStart(2, '0');
+                const mm = String(start.getMinutes()).padStart(2, '0');
+                times.add(`${hh}:${mm}`);
+                if (staff.salesStaff?.name) {
+                  const key = `${hh}:${mm}`;
+                  if (!staffByTime[key]) staffByTime[key] = new Set();
+                  staffByTime[key].add(staff.salesStaff.name);
+                }
+              }
+            });
+            const hasAvailability = (staff.slots || []).some((slot: any) => slot.isAvailable);
+            if (hasAvailability && staff.salesStaff?.name) {
+              staffWithSlots.push(staff.salesStaff.name);
+            }
+          });
+          const list = Array.from(times).sort();
+          const normalizedStaffByTime: Record<string, string[]> = {};
+          Object.entries(staffByTime).forEach(([time, names]) => {
+            normalizedStaffByTime[time] = Array.from(names).sort();
+          });
+          setAvailableTimes(list);
+          setAvailableStaff(staffWithSlots.slice(0, 3));
+          setAvailableStaffByTime(normalizedStaffByTime);
+          if (list.length === 0) {
+            setSlotsError('No staff available for this date. Please pick another date.');
+          }
+        } else {
+          // Fallback: allow default slots if API shape changes
+          setAvailableTimes(TIME_SLOTS.map((s) => s.time));
+          setAvailableStaff([]);
+          setAvailableStaffByTime({});
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSlotsError('Could not load availability. Please try another date.');
+          setAvailableTimes([]);
+          setAvailableStaff([]);
+          setAvailableStaffByTime({});
+        }
+      } finally {
+        if (!cancelled) setLoadingSlots(false);
+      }
+    };
+
+    loadSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate]);
 
   // NCR provinces/cities
   const NCR_AREAS = ['Metro Manila', 'NCR', 'Manila', 'Quezon City', 'Makati', 'Pasig', 'Taguig', 'Mandaluyong', 'Pasay', 'Parañaque', 'Las Piñas', 'Muntinlupa', 'Caloocan', 'Malabon', 'Navotas', 'Valenzuela', 'Marikina', 'San Juan', 'Pateros'];
@@ -102,6 +180,9 @@ const BookAppointment: React.FC = () => {
     setError('');
     setSelectedDate(date);
     setSelectedTime('');
+    setSlotsError('');
+    setAvailableStaff([]);
+    setAvailableStaffByTime({});
   };
 
   const handleAddressChange = (field: keyof SiteAddress, value: string) => {
@@ -121,6 +202,11 @@ const BookAppointment: React.FC = () => {
   const handleSubmit = async () => {
     if (!selectedDate || !selectedTime) {
       setError('Please select a date and time');
+      return;
+    }
+
+    if (!availableTimes.includes(selectedTime)) {
+      setError('Selected time is no longer available. Please pick another slot.');
       return;
     }
 
@@ -148,17 +234,29 @@ const BookAppointment: React.FC = () => {
         appointmentData.siteAddress = siteAddress;
       }
       
-      await appointmentApi.create(appointmentData);
+      const response = await appointmentApi.create(appointmentData);
+      const created = response?.data?.appointment || response?.data?.data?.appointment || response?.appointment;
+      const appointmentId = created?._id || '—';
+
+      notify({
+        type: 'success',
+        title: 'Appointment booked',
+        message: `We will confirm your schedule shortly. Appointment ID: ${appointmentId}`,
+        persist: true,
+      });
       navigate('/dashboard/customer/appointments', {
         state: { success: 'Appointment booked successfully! Our team will confirm your schedule shortly.' }
       });
     } catch (err: any) {
       console.error('Appointment booking error:', err.response?.data);
       setError(err.response?.data?.message || 'Failed to book appointment. Please try again.');
+      notify({ type: 'error', title: 'Booking failed', message: err.response?.data?.message || 'Please try again.' });
     } finally {
       setSubmitting(false);
     }
   };
+
+  const staffForSelectedTime = selectedTime ? availableStaffByTime[selectedTime] || [] : [];
 
   // Show loading while checking for existing appointment
   if (checkingAppointment) {
@@ -553,21 +651,63 @@ const BookAppointment: React.FC = () => {
           {selectedDate && (
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-3">Select Time</label>
+              {loadingSlots && (
+                <div className="flex items-center gap-2 text-slate-500 text-sm mb-2">
+                  <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-900 rounded-full animate-spin" />
+                  Checking availability...
+                </div>
+              )}
+              {slotsError && (
+                <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                  {slotsError}
+                </div>
+              )}
+              {availableStaff.length > 0 && (
+                <div className="mb-3 text-xs text-slate-500">
+                  Available staff for this date: {availableStaff.join(', ')}
+                  {availableStaff.length >= 3 && ' …'}
+                </div>
+              )}
               <div className="grid grid-cols-4 gap-2 md:gap-3">
-                {TIME_SLOTS.map((slot) => (
-                  <button
-                    key={slot.time}
-                    onClick={() => setSelectedTime(slot.time)}
-                    className={`p-2.5 md:p-3 rounded-xl text-xs md:text-sm font-medium transition-all ${
-                      selectedTime === slot.time
-                        ? 'bg-slate-900 text-white'
-                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {slot.label}
-                  </button>
-                ))}
+                {TIME_SLOTS.map((slot) => {
+                  const isAvailable = availableTimes.includes(slot.time);
+                  return (
+                    <button
+                      key={slot.time}
+                      onClick={() => isAvailable && setSelectedTime(slot.time)}
+                      disabled={!isAvailable}
+                      className={`p-2.5 md:p-3 rounded-xl text-xs md:text-sm font-medium transition-all ${
+                        selectedTime === slot.time
+                          ? 'bg-slate-900 text-white'
+                          : isAvailable
+                            ? 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                            : 'bg-slate-50 text-slate-400 border border-dashed border-slate-200 cursor-not-allowed'
+                      }`}
+                    >
+                      {slot.label}
+                    </button>
+                  );
+                })}
               </div>
+              {selectedTime && (
+                <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Staff who can take this time</p>
+                  {staffForSelectedTime.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {staffForSelectedTime.map((name) => (
+                        <span
+                          key={name}
+                          className="px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-700"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500">No staff shown yet for this slot.</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -580,7 +720,7 @@ const BookAppointment: React.FC = () => {
             </button>
             <button
               onClick={() => setStep(3)}
-              disabled={!selectedDate || !selectedTime || (appointmentType === 'ocular_visit' && (!siteAddress.street || !siteAddress.city))}
+              disabled={!selectedDate || !selectedTime || !availableTimes.includes(selectedTime) || (appointmentType === 'ocular_visit' && (!siteAddress.street || !siteAddress.city))}
               className="px-6 py-3 bg-slate-900 text-white rounded-xl font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Continue
@@ -626,6 +766,18 @@ const BookAppointment: React.FC = () => {
                   {TIME_SLOTS.find(s => s.time === selectedTime)?.label}
                 </span>
               </div>
+              {staffForSelectedTime.length > 0 && (
+                <div className="py-3 border-b border-slate-100">
+                  <span className="text-slate-500 block mb-2">Staff for this time</span>
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    {staffForSelectedTime.map((name) => (
+                      <span key={name} className="px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Site Address for Ocular */}
               {appointmentType === 'ocular_visit' && (

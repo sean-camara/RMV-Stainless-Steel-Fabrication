@@ -76,6 +76,50 @@
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800;
   }
+
+  /* Unified select styling */
+  .rmv-select {
+    @apply w-full rounded-xl border border-slate-200 bg-white/90 px-4 py-3 text-sm font-medium text-slate-900 shadow-[0_14px_48px_-28px_rgba(15,23,42,0.55)] transition-all duration-200;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient(135deg, rgba(14,165,233,0.08), rgba(59,130,246,0.06)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center, 0 0;
+    background-size: 12px 12px, 100% 100%;
+  }
+
+  .rmv-select:hover {
+    @apply border-slate-300 shadow-[0_18px_48px_-30px_rgba(15,23,42,0.55)];
+    transform: translateY(-1px);
+  }
+
+  .rmv-select:focus {
+    @apply outline-none border-cyan-500 ring-2 ring-cyan-500/40 shadow-[0_16px_48px_-28px_rgba(6,182,212,0.45)];
+  }
+
+  .rmv-select:disabled {
+    @apply opacity-60 cursor-not-allowed shadow-none;
+    transform: none;
+  }
+
+  .rmv-select--dark {
+    @apply bg-slate-900/85 text-white border-slate-700 shadow-[0_22px_60px_-34px_rgba(0,0,0,0.8)];
+    background-image: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(14,165,233,0.16)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e2e8f0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+
+  .rmv-select--minimal {
+    @apply bg-white text-slate-900 border-slate-200 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.45)];
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230f172a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  }
+
+  .rmv-select--error {
+    @apply border-red-500 ring-2 ring-red-500/30;
+    box-shadow: 0 12px 32px -20px rgba(248, 113, 113, 0.45);
+  }
+
+  .rmv-select::-ms-expand {
+    display: none;
+  }
 }
 
 /* Custom Scrollbar Styles */

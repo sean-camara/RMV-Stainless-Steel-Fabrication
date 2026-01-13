@@ -71,8 +71,14 @@ export const appointmentApi = {
     return response.data;
   },
 
-  cancel: async (id: string, reason?: string) => {
-    const response = await api.put(`/appointments/${id}/cancel`, { reason });
+  cancel: async (
+    id: string,
+    data?: {
+      reason?: string;
+      message?: string;
+    }
+  ) => {
+    const response = await api.put(`/appointments/${id}/cancel`, data || {});
     return response.data;
   },
 
@@ -83,6 +89,21 @@ export const appointmentApi = {
 
   markNoShow: async (id: string) => {
     const response = await api.put(`/appointments/${id}/no-show`);
+    return response.data;
+  },
+
+  setTravelFee: async (id: string, data: { amount: number; notes?: string; isRequired?: boolean }) => {
+    const response = await api.put(`/appointments/${id}/travel-fee`, data);
+    return response.data;
+  },
+
+  collectTravelFee: async (id: string, data: { collectedAmount: number; notes?: string }) => {
+    const response = await api.put(`/appointments/${id}/travel-fee/collect`, data);
+    return response.data;
+  },
+
+  verifyTravelFee: async (id: string, data: { notes?: string }) => {
+    const response = await api.put(`/appointments/${id}/travel-fee/verify`, data);
     return response.data;
   },
 };
@@ -120,6 +141,11 @@ export const projectApi = {
 
   getPendingForEngineer: async () => {
     const response = await api.get('/projects/pending/engineer');
+    return response.data;
+  },
+
+  getFabrication: async () => {
+    const response = await api.get('/projects/fabrication');
     return response.data;
   },
 

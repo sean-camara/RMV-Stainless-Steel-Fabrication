@@ -154,93 +154,97 @@ const ProjectList: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8 min-w-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Project Management</h1>
-          <p className="text-slate-400 mt-1">Create and manage customer projects</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 sm:gap-6 pt-1">
+        <div className="space-y-1.5">
+          <p className="text-xs uppercase tracking-wide text-slate-400">Sales • Projects</p>
+          <h1 className="text-2xl font-bold text-slate-900">Project Management</h1>
+          <p className="text-slate-600">Create projects, update quotations, and keep clients moving.</p>
         </div>
         <Button
           onClick={() => setShowCreateModal(true)}
           icon={<Plus className="w-4 h-4" />}
+          className="bg-slate-900 hover:bg-slate-800 focus:ring-slate-500 text-white"
         >
           New Project
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-              <Briefcase className="w-6 h-6 text-cyan-400" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card variant="light" className="min-w-0">
+          <CardContent className="flex items-center gap-3 sm:gap-4 py-4 min-w-0">
+            <div className="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center text-cyan-600">
+              <Briefcase className="w-6 h-6" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">{projects.length}</p>
-              <p className="text-sm text-slate-400">Total Projects</p>
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-slate-900 leading-tight">{projects.length}</p>
+              <p className="text-sm text-slate-500 leading-snug break-words">Total Projects</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-400" />
+        <Card variant="light" className="min-w-0">
+          <CardContent className="flex items-center gap-3 sm:gap-4 py-4 min-w-0">
+            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+              <Clock className="w-6 h-6" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-slate-900 leading-tight">
                 {projects.filter((p) => p.status === 'blueprint_pending').length}
               </p>
-              <p className="text-sm text-slate-400">Awaiting Blueprint</p>
+              <p className="text-sm text-slate-500 leading-snug break-words">Awaiting Blueprint</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Edit className="w-6 h-6 text-blue-400" />
+        <Card variant="light" className="min-w-0">
+          <CardContent className="flex items-center gap-3 sm:gap-4 py-4 min-w-0">
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
+              <Edit className="w-6 h-6" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-slate-900 leading-tight">
                 {projects.filter((p) => p.status === 'in_fabrication').length}
               </p>
-              <p className="text-sm text-slate-400">In Fabrication</p>
+              <p className="text-sm text-slate-500 leading-snug break-words">In Fabrication</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-green-400" />
+        <Card variant="light" className="min-w-0">
+          <CardContent className="flex items-center gap-3 sm:gap-4 py-4 min-w-0">
+            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+              <DollarSign className="w-6 h-6" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
+            <div className="min-w-0">
+              <p className="text-2xl font-bold text-slate-900 leading-tight">
                 ₱{projects.reduce((sum, p) => sum + (p.quotation?.totalAmount || 0), 0).toLocaleString()}
               </p>
-              <p className="text-sm text-slate-400">Total Value</p>
+              <p className="text-sm text-slate-500 leading-snug break-words">Total Value</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card variant="light">
         <CardContent className="py-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
             <div className="flex-1">
               <Input
                 placeholder="Search by project name or customer..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 icon={<Search className="w-4 h-4" />}
+                variant="light"
               />
             </div>
             <div className="w-full md:w-56">
               <Select
                 value={statusFilter}
+                variant="minimal"
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
@@ -264,15 +268,15 @@ const ProjectList: React.FC = () => {
       </Card>
 
       {/* Projects Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-cyan-400" />
+      <Card variant="light" className="min-w-0">
+        <CardHeader variant="light">
+          <CardTitle variant="light" className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-cyan-500" />
             Projects
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <Table variant="light">
             <TableHeader>
               <TableRow>
                 <TableHead>Project</TableHead>
@@ -288,24 +292,24 @@ const ProjectList: React.FC = () => {
                 <TableEmpty
                   colSpan={6}
                   message="No projects found"
-                  icon={<Briefcase className="w-12 h-12 text-slate-600" />}
+                  icon={<Briefcase className="w-12 h-12 text-slate-400" />}
                 />
               ) : (
                 filteredProjects.map((project) => (
                   <TableRow key={project._id}>
                     <TableCell>
-                      <p className="font-medium text-white">{project.projectName}</p>
-                      <p className="text-sm text-slate-400 max-w-xs truncate">
+                      <p className="font-semibold text-slate-900">{project.projectName}</p>
+                      <p className="text-sm text-slate-500 max-w-xs truncate">
                         {project.description || 'No description'}
                       </p>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-slate-300" />
+                        <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                          <User className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-white">
+                          <p className="text-slate-900 font-medium">
                             {project.customerId?.firstName} {project.customerId?.lastName}
                           </p>
                         </div>
@@ -315,12 +319,12 @@ const ProjectList: React.FC = () => {
                       <StatusBadge status={project.status} />
                     </TableCell>
                     <TableCell>
-                      <p className="text-white font-medium">
+                      <p className="text-slate-900 font-semibold">
                         ₱{project.quotation?.totalAmount?.toLocaleString() || '0'}
                       </p>
                     </TableCell>
                     <TableCell>
-                      <p className="text-slate-400">
+                      <p className="text-slate-500">
                         {format(new Date(project.createdAt), 'MMM d, yyyy')}
                       </p>
                     </TableCell>
@@ -368,6 +372,7 @@ const ProjectList: React.FC = () => {
         onClose={() => setShowCreateModal(false)}
         title="Create New Project"
         size="lg"
+        variant="light"
       >
         <div className="space-y-4">
           <Input
@@ -376,6 +381,7 @@ const ProjectList: React.FC = () => {
             value={formData.customerId}
             onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
             required
+            variant="light"
           />
           <Input
             label="Project Name"
@@ -383,6 +389,7 @@ const ProjectList: React.FC = () => {
             value={formData.projectName}
             onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
             required
+            variant="light"
           />
           <Textarea
             label="Description"
@@ -390,10 +397,11 @@ const ProjectList: React.FC = () => {
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             rows={3}
+            variant="light"
           />
 
-          <div className="border-t border-slate-700 pt-4">
-            <h4 className="font-medium text-white mb-3">Quotation Details</h4>
+          <div className="border-t border-slate-200 pt-4">
+            <h4 className="font-medium text-slate-900 mb-3">Quotation Details</h4>
             <div className="grid grid-cols-3 gap-4">
               <Input
                 label="Material Cost (₱)"
@@ -401,6 +409,7 @@ const ProjectList: React.FC = () => {
                 placeholder="0.00"
                 value={formData.materialCost}
                 onChange={(e) => setFormData({ ...formData, materialCost: e.target.value })}
+                variant="light"
               />
               <Input
                 label="Labor Cost (₱)"
@@ -408,6 +417,7 @@ const ProjectList: React.FC = () => {
                 placeholder="0.00"
                 value={formData.laborCost}
                 onChange={(e) => setFormData({ ...formData, laborCost: e.target.value })}
+                variant="light"
               />
               <Input
                 label="Est. Days"
@@ -415,11 +425,12 @@ const ProjectList: React.FC = () => {
                 placeholder="0"
                 value={formData.estimatedDays}
                 onChange={(e) => setFormData({ ...formData, estimatedDays: e.target.value })}
+                variant="light"
               />
             </div>
-            <div className="mt-3 p-3 bg-slate-700/50 rounded-lg">
-              <p className="text-sm text-slate-400">Total Amount</p>
-              <p className="text-xl font-bold text-cyan-400">
+            <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <p className="text-sm text-slate-500">Total Amount</p>
+              <p className="text-xl font-bold text-slate-900">
                 ₱{(
                   (parseFloat(formData.materialCost) || 0) +
                   (parseFloat(formData.laborCost) || 0)
@@ -429,10 +440,18 @@ const ProjectList: React.FC = () => {
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
-            <Button variant="ghost" onClick={() => setShowCreateModal(false)}>
+            <Button
+              variant="outline"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              onClick={() => setShowCreateModal(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreateProject} loading={processing}>
+            <Button
+              onClick={handleCreateProject}
+              loading={processing}
+              className="bg-slate-900 hover:bg-slate-800 focus:ring-slate-500 text-white"
+            >
               Create Project
             </Button>
           </div>
@@ -453,24 +472,24 @@ const ProjectList: React.FC = () => {
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-slate-400">Project Name</label>
-                <p className="text-white font-medium">{selectedProject.projectName}</p>
+                <label className="text-sm text-slate-500">Project Name</label>
+                <p className="text-slate-900 font-medium">{selectedProject.projectName}</p>
               </div>
               <div>
-                <label className="text-sm text-slate-400">Status</label>
+                <label className="text-sm text-slate-500">Status</label>
                 <div className="mt-1">
                   <StatusBadge status={selectedProject.status} />
                 </div>
               </div>
               <div>
-                <label className="text-sm text-slate-400">Customer</label>
-                <p className="text-white">
+                <label className="text-sm text-slate-500">Customer</label>
+                <p className="text-slate-900 font-medium">
                   {selectedProject.customerId?.firstName} {selectedProject.customerId?.lastName}
                 </p>
               </div>
               <div>
-                <label className="text-sm text-slate-400">Created</label>
-                <p className="text-white">
+                <label className="text-sm text-slate-500">Created</label>
+                <p className="text-slate-900">
                   {format(new Date(selectedProject.createdAt), 'MMMM d, yyyy')}
                 </p>
               </div>
@@ -478,16 +497,16 @@ const ProjectList: React.FC = () => {
 
             {selectedProject.description && (
               <div>
-                <label className="text-sm text-slate-400">Description</label>
-                <p className="text-white mt-1 bg-slate-700/50 p-3 rounded-lg">
+                <label className="text-sm text-slate-500">Description</label>
+                <p className="text-slate-900 mt-1 bg-slate-50 p-3 rounded-lg border border-slate-100">
                   {selectedProject.description}
                 </p>
               </div>
             )}
 
             {/* Editable Quotation */}
-            <div className="border-t border-slate-700 pt-4">
-              <h4 className="font-medium text-white mb-3">Update Quotation</h4>
+            <div className="border-t border-slate-200 pt-4">
+              <h4 className="font-medium text-slate-900 mb-3">Update Quotation</h4>
               <div className="grid grid-cols-3 gap-4">
                 <Input
                   label="Material Cost (₱)"
@@ -514,7 +533,11 @@ const ProjectList: React.FC = () => {
               <Button variant="ghost" onClick={() => setShowDetailsModal(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleUpdateQuotation} loading={processing}>
+              <Button
+                onClick={handleUpdateQuotation}
+                loading={processing}
+                className="bg-slate-900 hover:bg-slate-800 focus:ring-slate-500 text-white"
+              >
                 Update Quotation
               </Button>
             </div>

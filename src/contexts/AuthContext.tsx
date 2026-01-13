@@ -51,8 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check for existing session on mount
   useEffect(() => {
     const initAuth = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      const storedUser = localStorage.getItem('user');
+      const accessToken = sessionStorage.getItem('accessToken');
+      const storedUser = sessionStorage.getItem('user');
 
       if (accessToken && storedUser) {
         try {
@@ -69,12 +69,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
           
           // Update stored user
-          localStorage.setItem('user', JSON.stringify(response.data.user));
+          sessionStorage.setItem('user', JSON.stringify(response.data.user));
         } catch (error) {
           // Token might be expired, clear storage
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
+          sessionStorage.removeItem('user');
           delete api.defaults.headers.common['Authorization'];
           
           setState({
@@ -100,10 +100,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     const { accessToken, refreshToken, user } = response.data;
     
-    // Store tokens
-    localStorage.setItem('accessToken', accessToken);
-    localStorage.setItem('refreshToken', refreshToken);
-    localStorage.setItem('user', JSON.stringify(user));
+    // Store tokens in sessionStorage for reduced persistence
+    sessionStorage.setItem('accessToken', accessToken);
+    sessionStorage.setItem('refreshToken', refreshToken);
+    sessionStorage.setItem('user', JSON.stringify(user));
     
     // Set token in API client
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
@@ -135,10 +135,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Ignore logout API errors
     });
     
-    // Clear local storage
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+    // Clear session storage
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('user');
     
     // Clear API client
     delete api.defaults.headers.common['Authorization'];
@@ -172,7 +172,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const response = await authApi.updateMe(data);
     
     const updatedUser = response.user;
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    sessionStorage.setItem('user', JSON.stringify(updatedUser));
     
     setState(prev => ({
       ...prev,
