@@ -243,6 +243,24 @@ VITE_API_URL=http://localhost:5000/api
    
    Navigate to `http://localhost:5173` (or the port shown in terminal)
 
+   Quick verification: if login fails after opening the app, verify the backend is running and reachable at the `VITE_API_URL` you set in your `.env`.
+
+How to test API connectivity
+
+- If your backend exposes a health or ping endpoint, run:
+
+```bash
+curl -i "${VITE_API_URL}/health" || curl -i "${VITE_API_URL}/auth/ping"
+```
+
+- Or check a simple GET to the API root (replace `<value>` if your `VITE_API_URL` already contains `/api`):
+
+```bash
+curl -i "${VITE_API_URL}"
+```
+
+Note: `src/api/client.ts` uses `VITE_API_URL` as the axios `baseURL`. In this repository the client defaults to include `/api` when falling back, so we recommend setting `VITE_API_URL` to include the API base (for example `http://localhost:5000/api`) to match the axios client behavior.
+
 ### Build for Production
 
 ```bash
