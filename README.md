@@ -198,15 +198,13 @@ The frontend only uses a few environment variables. Others (like MongoDB setting
 
 | Variable         | Required | Description                                 |
 |------------------|----------|---------------------------------------------|
-| VITE_API_URL     | Yes      | Base URL for backend API                    |
-| FRONTEND_PORT    | No       | Port for frontend dev server (default: 5173)|
+| VITE_API_URL     | Yes      | Base URL for backend API (include `/api`)   |
 | FRONTEND_URL     | No       | Public URL for frontend (optional)          |
 | NODE_ENV         | No       | Node environment (development/production)   |
 
 **Example .env:**
 ```env
-VITE_API_URL=http://localhost:5000
-# FRONTEND_PORT=5173
+VITE_API_URL=http://localhost:5000/api
 # FRONTEND_URL=http://localhost:5173
 # NODE_ENV=development
 ```
@@ -311,21 +309,7 @@ Configuration is in `tsconfig.json` with strict mode enabled.
 1. Add function in `src/api/services.ts`
 2. Use the configured axios client from `src/api/client.ts`
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **API connection errors**
-   - Ensure backend is running on port 5000
-   - Check `.env` file has correct API URL
-
-2. **Styling not applying**
-   - Run `npm run dev` to rebuild
-   - Clear browser cache
-
-3. **TypeScript errors**
-   - Run `npm run build` to see all errors
-   - Check type definitions in `src/types/index.ts`
+<!-- Removed duplicate troubleshooting block; consolidated earlier. -->
 
 ## 📄 License
 
