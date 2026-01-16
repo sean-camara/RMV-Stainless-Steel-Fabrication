@@ -1,7 +1,15 @@
 /// <reference types="vite/client" />
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
+// Normalize VITE_API_URL: accept either `http://host:port` or `http://host:port/api`
+const rawUrl = (import.meta as any).env?.VITE_API_URL;
+let API_URL: string;
+if (rawUrl) {
+  const trimmed = rawUrl.replace(/\/+$/, '');
+  API_URL = trimmed.includes('/api') ? trimmed : `${trimmed}/api`;
+} else {
+  API_URL = 'http://localhost:5000/api';
+}
 
 // Create axios instance
 const api = axios.create({
