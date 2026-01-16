@@ -167,12 +167,49 @@ frontend/
    npm install
    ```
 
+
+
 3. **Environment Setup**
-   
-   Create a `.env` file in the root directory:
+
+   1. Copy `.env.example` to `.env` in the root directory:
+      ```bash
+      cp .env.example .env
+      # On Windows (PowerShell):
+      Copy-Item .env.example .env
+      ```
+
+   2. Edit `.env` and set the required variables:
+      - `VITE_API_URL` (required): The base URL for your backend API (e.g. `http://localhost:5000` for local dev)
+      - (Optional) Add any other `VITE_` variables as needed for features or analytics
+
+   **Important:**
+   - The frontend `.env.example` does **not** include any MongoDB or backend variables. Only variables prefixed with `VITE_` are used by the frontend.
+   - MongoDB is **not required** to run the frontend. You only need the backend API running and accessible at the URL you set in `VITE_API_URL`.
+
+   **Example:**
    ```env
-   VITE_API_URL=http://localhost:5000/api
+   VITE_API_URL=http://localhost:5000
    ```
+
+---
+
+## 🐛 Troubleshooting
+
+**Common Issues:**
+
+1. **Login or API calls fail**
+   - Make sure the backend is running and accessible at the URL in your `.env` (`VITE_API_URL`).
+   - If you see CORS errors, check that the backend allows requests from the frontend's origin.
+
+2. **Styling not applying**
+   - Run `npm run dev` to rebuild
+   - Clear browser cache
+
+3. **TypeScript errors**
+   - Run `npm run build` to see all errors
+   - Check type definitions in `src/types/index.ts`
+
+---
 
 4. **Start the development server**
    ```bash
