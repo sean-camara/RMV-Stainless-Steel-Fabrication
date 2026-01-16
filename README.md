@@ -177,35 +177,56 @@ frontend/
       # On Windows (PowerShell):
       Copy-Item .env.example .env
       ```
-
-   2. Edit `.env` and set the required variables:
-      - `VITE_API_URL` (required): The base URL for your backend API (e.g. `http://localhost:5000` for local dev)
-      - (Optional) Add any other `VITE_` variables as needed for features or analytics
-
-   **Important:**
-   - The frontend `.env.example` does **not** include any MongoDB or backend variables. Only variables prefixed with `VITE_` are used by the frontend.
-   - MongoDB is **not required** to run the frontend. You only need the backend API running and accessible at the URL you set in `VITE_API_URL`.
-
-   **Example:**
-   ```env
-   VITE_API_URL=http://localhost:5000
-   ```
+   2. Edit `.env` and set the required variables (see below for details).
 
 ---
 
-## 🐛 Troubleshooting
+## ⚠️ Backend Dependency
+
+**The backend server must be running before login and API features will work.**
+Set `VITE_API_URL` in your `.env` to the backend's URL (e.g. `http://localhost:5000`).
+
+---
+
+## 🌱 Environment Variables
+
+The frontend only uses a few environment variables. Others (like MongoDB settings) are not needed and should not be present in your `.env`.
+
+| Variable         | Required | Description                                 |
+|------------------|----------|---------------------------------------------|
+| VITE_API_URL     | Yes      | Base URL for backend API                    |
+| FRONTEND_PORT    | No       | Port for frontend dev server (default: 5173)|
+| FRONTEND_URL     | No       | Public URL for frontend (optional)          |
+| NODE_ENV         | No       | Node environment (development/production)   |
+
+**Example .env:**
+```env
+VITE_API_URL=http://localhost:5000
+# FRONTEND_PORT=5173
+# FRONTEND_URL=http://localhost:5173
+# NODE_ENV=development
+```
+
+---
+
+---
+
+## 🛠️ Troubleshooting
 
 **Common Issues:**
 
-1. **Login or API calls fail**
-   - Make sure the backend is running and accessible at the URL in your `.env` (`VITE_API_URL`).
-   - If you see CORS errors, check that the backend allows requests from the frontend's origin.
+1. **Login not working**
+   - Make sure the backend server is running and accessible at the URL set in `VITE_API_URL`.
 
-2. **Styling not applying**
+2. **Network/API errors**
+   - Check that `VITE_API_URL` in your `.env` matches the backend's URL.
+   - If you see CORS errors, ensure the backend allows requests from the frontend's origin.
+
+3. **Styling not applying**
    - Run `npm run dev` to rebuild
    - Clear browser cache
 
-3. **TypeScript errors**
+4. **TypeScript errors**
    - Run `npm run build` to see all errors
    - Check type definitions in `src/types/index.ts`
 
