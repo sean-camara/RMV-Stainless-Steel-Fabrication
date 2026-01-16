@@ -4,6 +4,10 @@ A modern, responsive web application for RMV Stainless Steel Fabrication company
 
 ## 🚀 Features
 
+> Note: This README and the file `./.env.example` in this folder are **frontend-only**.
+> Do not use the repository root `.env.example` (it contains backend-only settings).
+
+
 ### Landing Pages
 - **Home Page** - Hero section, services overview, recent projects, testimonials, and call-to-action
 - **About Page** - Company history, mission, values, and team information
