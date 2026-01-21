@@ -205,10 +205,25 @@ const BookAppointment: React.FC = () => {
     return day === 0 || day === 6;
   };
 
+  // Get list of disabled dates for validation
+  const getDisabledDates = () => {
+    const disabled = [];
+    const today = new Date();
+    const endDate = new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    
+    for (let d = new Date(today); d <= endDate; d.setDate(d.getDate() + 1)) {
+      if (d.getDay() === 0 || d.getDay() === 6) { // Sunday or Saturday
+        disabled.push(d.toISOString().split('T')[0]);
+      }
+    }
+    return disabled;
+  };
+
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const date = e.target.value;
     if (isWeekend(date)) {
-      setError('We are closed on weekends. Please select a weekday.');
+      setError('We are closed on weekends. Please select a weekday (Mon-Fri).');
+      setSelectedDate(''); // Clear the invalid selection
       return;
     }
     setError('');
@@ -611,12 +626,19 @@ const BookAppointment: React.FC = () => {
                          min={getMinDate()}
                          value={selectedDate}
                          onChange={handleDateChange}
+                         onInvalid={(e) => e.preventDefault()}
                          className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent font-medium"
                        />
                        <div className="mt-3 flex items-start gap-2 text-xs text-slate-500">
                           <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
                           <p>We are closed on weekends. Please pick a weekday (Mon-Fri).</p>
                        </div>
+                       {error && selectedDate === '' && (
+                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                           <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0 mt-0.5"></div>
+                           <p className="text-xs text-red-700 font-medium">{error}</p>
+                         </div>
+                       )}
                     </div>
                  </div>
 
