@@ -683,18 +683,14 @@ const BookAppointment: React.FC = () => {
                          </div>
                       )}
                       
-                      {/* Available Staff Indicator */}
-                      {selectedTime && staffForSelectedTime.length > 0 && (
-                        <div className="mt-4 p-3 bg-emerald-50 border border-emerald-100 rounded-xl inline-flex items-center gap-2">
-                           <div className="flex -space-x-2">
-                              {staffForSelectedTime.slice(0, 3).map((_, i) => (
-                                 <div key={i} className="w-6 h-6 rounded-full bg-emerald-200 border-2 border-white flex items-center justify-center text-[10px] text-emerald-700 font-bold">
-                                    <User className="w-3 h-3" />
-                                 </div>
-                              ))}
+                      {/* Staff assignment info - agent assigns after approval */}
+                      {selectedTime && (
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-xl inline-flex items-center gap-2">
+                           <div className="w-6 h-6 rounded-full bg-blue-200 border-2 border-white flex items-center justify-center">
+                              <User className="w-3 h-3 text-blue-700" />
                            </div>
-                           <span className="text-xs font-semibold text-emerald-700">
-                              {staffForSelectedTime.length} specialist{staffForSelectedTime.length > 1 ? 's' : ''} available
+                           <span className="text-xs font-semibold text-blue-700">
+                              Specialist to be assigned by agent
                            </span>
                         </div>
                       )}
@@ -707,7 +703,7 @@ const BookAppointment: React.FC = () => {
                        </div>
                        <h3 className="text-lg font-bold text-slate-900 mb-2">Select a Date to Continue</h3>
                        <p className="text-slate-500 max-w-xs mx-auto leading-relaxed text-sm">
-                          Please choose your preferred appointment date from the calendar to view available time slots for our specialists.
+                          Please choose your preferred appointment date from the calendar to view available time slots.
                        </p>
                        
                        <div className={`mt-8 grid gap-4 w-full max-w-sm ${appointmentType === 'ocular_visit' ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -723,12 +719,12 @@ const BookAppointment: React.FC = () => {
                             </div>
                           )}
                           <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
-                             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                             <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                                 <User className="w-4 h-4" />
                              </div>
                              <div className="text-left">
-                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Specialists</p>
-                                <p className="text-xs font-bold text-slate-700">Expert Team</p>
+                                <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-0.5">Staff</p>
+                                <p className="text-xs font-bold text-slate-700">To be assigned</p>
                              </div>
                           </div>
                        </div>

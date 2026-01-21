@@ -341,8 +341,9 @@ This project is proprietary software for RMV Stainless Steel Fabrication.
 - **UI/UX improvements**: Redesigned multi-step booking wizard with better layout
 - **Form persistence**: Added `sessionStorage` to preserve form data on page refresh
 - **Map integration**: Added interactive Leaflet map for Ocular Visit address selection with geocoding
-- **Removed specialist display**: Booking confirmation no longer shows pre-assigned staff (agent assigns manually)
+- **Removed specialist display**: Both Office Consultation and Ocular Visit no longer show "X specialists available" - agent assigns manually
 - **Updated messaging**: Changed "Appointment Confirmed" to "Request Submitted" to reflect approval workflow
+- **Consistent staff info**: Both appointment types now show "Specialist to be assigned by agent"
 
 #### 🔔 Notification System Integration (CustomerLayout.tsx)
 - **Backend notifications**: Bell icon now fetches notifications from backend API (`/api/notifications`)
