@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import { getFullImageUrl } from '../../utils/image';
 import type { UserRole } from '../../types';
 
 interface NavItem {
@@ -267,6 +268,20 @@ const DashboardLayout: React.FC = () => {
   const { feed, unreadCount, markAllRead, removeFeedItem } = useNotification();
   const location = useLocation();
   const navigate = useNavigate();
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when user/avatar changes
+  useEffect(() => {
+    setImgError(false);
+  }, [user?.profile?.avatar, user?.avatar]);
+
+  // Debug: surface the avatar data used by the sidebar
+  useEffect(() => {
+    if (!user) return;
+    const raw = user.profile?.avatar || user.avatar;
+    const url = getFullImageUrl(raw);
+    console.log('[Sidebar Avatar]', { rawAvatar: raw, resolvedUrl: url, imgError });
+  }, [user, user?.profile?.avatar, user?.avatar, imgError]);
 
   const handleLogout = () => {
     logout();
@@ -374,8 +389,23 @@ const DashboardLayout: React.FC = () => {
           {user && (
             <div className={`p-3 ${isCollapsed ? 'flex justify-center' : ''}`}>
               <div className={`flex items-center ${isCollapsed ? '' : 'space-x-3'}`}>
-                <div className="w-9 h-9 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
+                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-slate-700 border border-slate-600">
+                  {(user.profile?.avatar || user.avatar) && !imgError ? (
+                    <img 
+                      src={getFullImageUrl(user.profile?.avatar || user.avatar) || ''} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        console.log('[Sidebar Avatar] img onError');
+                        setImgError(true);
+                      }}
+                      onLoad={() => console.log('[Sidebar Avatar] img onLoad')}
+                    />
+                  ) : (
+                    <span className="text-white text-sm font-medium">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    </span>
+                  )}
                 </div>
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0">
@@ -485,9 +515,18 @@ const DashboardLayout: React.FC = () => {
               onClick={() => setShowMobileMenu(false)}
             />
             <div className="absolute right-4 top-14 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-50">
-              <div className="px-4 py-2 border-b border-slate-100">
-                <p className="text-sm font-medium text-slate-900">{user?.firstName} {user?.lastName}</p>
-                <p className="text-xs text-slate-500">{roleLabel}</p>
+              <div className="px-4 py-2 border-b border-slate-100 flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-slate-200">
+                    <img 
+                      src={getFullImageUrl(user?.profile?.avatar || user?.avatar) || '/1.jpg'} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover" 
+                    />
+                 </div>
+                 <div className="overflow-hidden">
+                    <p className="text-sm font-medium text-slate-900 truncate">{user?.firstName}</p>
+                    <p className="text-xs text-slate-500 truncate">{roleLabel}</p>
+                 </div>
               </div>
               <Link
                 to="/"
@@ -550,7 +589,11 @@ const DashboardLayout: React.FC = () => {
           <div className="flex items-center justify-between h-16 px-6">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border border-slate-200">
-                <img src="/1.jpg" alt="RMV" className="w-full h-full object-cover" />
+                <img 
+                  src={getFullImageUrl(user?.profile?.avatar || user?.avatar) || '/1.jpg'} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <h1 className="text-lg font-semibold text-slate-900">
                 {navItems.find(item => isActive(item.path))?.name || 'Dashboard'}

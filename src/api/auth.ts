@@ -62,8 +62,18 @@ export const authApi = {
   },
 
   // Update profile
-  updateMe: async (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone'>>) => {
+  updateMe: async (data: Partial<Pick<User, 'firstName' | 'lastName' | 'phone' | 'address' | 'notifications'>>) => {
     const response = await api.put('/auth/me', data);
+    return response.data;
+  },
+
+  // Upload Avatar
+  uploadAvatar: async (file: File) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post('/auth/me/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 

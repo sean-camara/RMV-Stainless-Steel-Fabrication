@@ -143,7 +143,7 @@ const Profile: React.FC = () => {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  placeholder="+63 912 345 6789"
+                  placeholder="+63 945 285 2974"
                 />
               </div>
               <div className="flex items-center space-x-3">

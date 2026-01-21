@@ -103,13 +103,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Store tokens in sessionStorage for reduced persistence
     sessionStorage.setItem('accessToken', accessToken);
     sessionStorage.setItem('refreshToken', refreshToken);
-    sessionStorage.setItem('user', JSON.stringify(user));
     
     // Set token in API client
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+    // Fetch fresh user to ensure avatar/profile are up to date immediately after login
+    let freshUser = user;
+    try {
+      const me = await authApi.getMe();
+      freshUser = me.data.user;
+      sessionStorage.setItem('user', JSON.stringify(freshUser));
+    } catch (err) {
+      // Fallback to login payload if /me fails
+      sessionStorage.setItem('user', JSON.stringify(user));
+    }
     
     setState({
-      user,
+      user: freshUser,
       isAuthenticated: true,
       isLoading: false,
     });
@@ -169,9 +179,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const updateProfile = useCallback(async (data: Partial<User>) => {
-    const response = await authApi.updateMe(data);
+    // If empty data is passed (e.g. just to trigger refresh), just fetch fresh data
+    let updatedUser;
     
-    const updatedUser = response.user;
+    if (Object.keys(data).length === 0) {
+        const response = await authApi.getMe();
+        updatedUser = response.data.user;
+    } else {
+        const response = await authApi.updateMe(data);
+        updatedUser = response.data.user;
+    }
+    
     sessionStorage.setItem('user', JSON.stringify(updatedUser));
     
     setState(prev => ({

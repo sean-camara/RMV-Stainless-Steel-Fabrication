@@ -8,13 +8,20 @@ import { useAuth } from './contexts/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Landing pages
-import { Home, About, Services, Portfolio } from './pages/landing';
+import { Home, About, Services, Portfolio, PrivacyPolicy, TermsOfService } from './pages/landing';
 
 // Auth pages
 import { Login, Register, VerifyEmail, ForgotPassword, ResetPassword } from './pages/auth';
 
 // Dashboard pages
 import { CustomerDashboard, BookAppointment, MyAppointments, MyProjects, MyPayments } from './pages/dashboard/customer';
+import { 
+  SettingsLayout, 
+  SettingsProfile, 
+  SettingsContact, 
+  SettingsSecurity, 
+  SettingsNotifications 
+} from './pages/dashboard/customer/settings';
 import { AgentDashboard, AppointmentList } from './pages/dashboard/agent';
 import { SalesDashboard, SalesAppointments, ProjectList as SalesProjectList, TravelFees as SalesTravelFees } from './pages/dashboard/sales';
 import { EngineerDashboard, BlueprintManagement } from './pages/dashboard/engineer';
@@ -46,6 +53,8 @@ const App: React.FC = () => {
             <Route path="/about" element={<About />} />
             <Route path="/services" element={<Services />} />
             <Route path="/portfolio" element={<Portfolio />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
           </Route>
 
           {/* Auth pages */}
@@ -101,6 +110,13 @@ const App: React.FC = () => {
             <Route path="projects" element={<MyProjects />} />
             <Route path="projects/:id" element={<MyProjects />} />
             <Route path="payments" element={<MyPayments />} />
+            <Route path="settings" element={<SettingsLayout />}>
+              <Route index element={<Navigate to="profile" replace />} />
+              <Route path="profile" element={<SettingsProfile />} />
+              <Route path="contact" element={<SettingsContact />} />
+              <Route path="security" element={<SettingsSecurity />} />
+              <Route path="notifications" element={<SettingsNotifications />} />
+            </Route>
           </Route>
 
           {/* Agent Dashboard */}

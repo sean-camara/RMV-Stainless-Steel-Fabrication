@@ -1,7 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNotification } from '../../contexts/NotificationContext';
+import { notificationApi } from '../../api/services';
+import { getFullImageUrl } from '../../utils/image';
+
+interface BackendNotification {
+  _id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  resourceType?: string;
+  resourceId?: string;
+}
 
 interface NavItem {
   name: string;
@@ -11,14 +23,71 @@ interface NavItem {
 }
 
 const CustomerLayout: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    // Load from localStorage on initial mount
+    const saved = localStorage.getItem('customerSidebarCollapsed');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const [notifications, setNotifications] = useState<BackendNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { user, logout } = useAuth();
-  const { feed, unreadCount, markAllRead, removeFeedItem } = useNotification();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Fetch notifications from backend
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const response = await notificationApi.getAll();
+      if (response.success) {
+        setNotifications(response.data.notifications);
+        setUnreadCount(response.data.notifications.filter((n: BackendNotification) => !n.read).length);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  }, []);
+
+  // Fetch notifications on mount and periodically
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
+  // Mark all as read
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationApi.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
+  // Remove/delete notification
+  const handleRemoveNotification = async (id: string) => {
+    try {
+      await notificationApi.delete(id);
+      setNotifications(prev => prev.filter(n => n._id !== id));
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
+
+  // Persist collapsed state to localStorage
+  useEffect(() => {
+    localStorage.setItem('customerSidebarCollapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
+
+  // Reset image error when avatar changes
+  useEffect(() => {
+    setImgError(false);
+  }, [user?.profile?.avatar, user?.avatar]);
 
   const handleLogout = () => {
     logout();
@@ -73,6 +142,17 @@ const CustomerLayout: React.FC = () => {
       icon: (
         <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Settings',
+      shortName: 'Settings',
+      path: '/dashboard/customer/settings',
+      icon: (
+        <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
     },
@@ -168,8 +248,19 @@ const CustomerLayout: React.FC = () => {
           {user && (
             <div className={`p-3 ${isCollapsed ? 'flex justify-center' : ''}`}>
               <div className={`flex items-center ${isCollapsed ? '' : 'space-x-3'}`}>
-                <div className="w-9 h-9 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
+                <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden bg-slate-700 border border-slate-600">
+                  {(user.profile?.avatar || user.avatar) && !imgError ? (
+                    <img 
+                      src={getFullImageUrl(user.profile?.avatar || user.avatar) || ''} 
+                      alt="Avatar" 
+                      className="w-full h-full object-cover"
+                      onError={() => setImgError(true)}
+                    />
+                  ) : (
+                    <span className="text-white text-sm font-medium">
+                      {user.firstName?.[0]}{user.lastName?.[0]}
+                    </span>
+                  )}
                 </div>
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0">
@@ -225,7 +316,7 @@ const CustomerLayout: React.FC = () => {
                 onClick={() => {
                   const next = !showNotifications;
                   setShowNotifications(next);
-                  if (next) markAllRead();
+                  if (next) handleMarkAllRead();
                 }}
                 className="relative p-2 text-slate-500 hover:text-slate-700"
               >
@@ -239,19 +330,19 @@ const CustomerLayout: React.FC = () => {
                 <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-xl z-50">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                     <p className="text-sm font-semibold text-slate-900">Notifications</p>
-                    <span className="text-xs text-slate-500">{feed.length || 0} total</span>
+                    <span className="text-xs text-slate-500">{notifications.length || 0} total</span>
                   </div>
                   <div className="max-h-72 overflow-y-auto">
-                    {feed.length === 0 ? (
+                    {notifications.length === 0 ? (
                       <div className="px-4 py-6 text-sm text-slate-500 text-center">No notifications yet</div>
                     ) : (
-                      feed.map((item) => (
-                        <div key={item.id} className="px-4 py-3 border-b border-slate-100 last:border-b-0">
+                      notifications.map((item) => (
+                        <div key={item._id} className={`px-4 py-3 border-b border-slate-100 last:border-b-0 ${!item.read ? 'bg-blue-50' : ''}`}>
                           {item.title && <p className="text-sm font-semibold text-slate-900">{item.title}</p>}
                           <p className="text-sm text-slate-600">{item.message}</p>
                           <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
-                            <span>{item.timestamp ? new Date(item.timestamp).toLocaleString() : ''}</span>
-                            <button onClick={() => removeFeedItem(item.id)} className="text-slate-400 hover:text-slate-600">Clear</button>
+                            <span>{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</span>
+                            <button onClick={() => handleRemoveNotification(item._id)} className="text-slate-400 hover:text-slate-600">Clear</button>
                           </div>
                         </div>
                       ))
@@ -264,9 +355,18 @@ const CustomerLayout: React.FC = () => {
             {/* Profile/Menu Button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 text-sm font-medium"
+              className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 text-sm font-medium overflow-hidden"
             >
-              {user?.firstName?.[0]}{user?.lastName?.[0]}
+              {(user?.profile?.avatar || user?.avatar) && !imgError ? (
+                <img 
+                  src={getFullImageUrl(user?.profile?.avatar || user?.avatar) || ''} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+              )}
             </button>
           </div>
         </div>
@@ -358,7 +458,7 @@ const CustomerLayout: React.FC = () => {
                   onClick={() => {
                     const next = !showNotifications;
                     setShowNotifications(next);
-                    if (next) markAllRead();
+                    if (next) handleMarkAllRead();
                   }}
                   className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 >
@@ -372,19 +472,19 @@ const CustomerLayout: React.FC = () => {
                   <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-200 rounded-xl shadow-2xl z-50">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                       <p className="text-sm font-semibold text-slate-900">Notifications</p>
-                      <button onClick={markAllRead} className="text-xs text-slate-500 hover:text-slate-700">Mark all read</button>
+                      <button onClick={handleMarkAllRead} className="text-xs text-slate-500 hover:text-slate-700">Mark all read</button>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
-                      {feed.length === 0 ? (
+                      {notifications.length === 0 ? (
                         <div className="px-4 py-6 text-sm text-slate-500 text-center">No notifications yet</div>
                       ) : (
-                        feed.map((item) => (
-                          <div key={item.id} className="px-4 py-3 border-b border-slate-100 last:border-b-0">
+                        notifications.map((item) => (
+                          <div key={item._id} className={`px-4 py-3 border-b border-slate-100 last:border-b-0 ${!item.read ? 'bg-blue-50' : ''}`}>
                             {item.title && <p className="text-sm font-semibold text-slate-900">{item.title}</p>}
                             <p className="text-sm text-slate-600">{item.message}</p>
                             <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
-                              <span>{item.timestamp ? new Date(item.timestamp).toLocaleString() : ''}</span>
-                              <button onClick={() => removeFeedItem(item.id)} className="text-slate-400 hover:text-slate-600">Clear</button>
+                              <span>{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</span>
+                              <button onClick={() => handleRemoveNotification(item._id)} className="text-slate-400 hover:text-slate-600">Clear</button>
                             </div>
                           </div>
                         ))

@@ -333,7 +333,55 @@ Configuration is in `tsconfig.json` with strict mode enabled.
 
 This project is proprietary software for RMV Stainless Steel Fabrication.
 
-## 👥 Contributors
+## � Changelog
+
+### January 22, 2026
+
+#### 📅 Booking Appointment (BookAppointment.tsx)
+- **UI/UX improvements**: Redesigned multi-step booking wizard with better layout
+- **Form persistence**: Added `sessionStorage` to preserve form data on page refresh
+- **Map integration**: Added interactive Leaflet map for Ocular Visit address selection with geocoding
+- **Removed specialist display**: Booking confirmation no longer shows pre-assigned staff (agent assigns manually)
+- **Updated messaging**: Changed "Appointment Confirmed" to "Request Submitted" to reflect approval workflow
+
+#### 🔔 Notification System Integration (CustomerLayout.tsx)
+- **Backend notifications**: Bell icon now fetches notifications from backend API (`/api/notifications`)
+- **Real-time polling**: Notifications refresh every 30 seconds
+- **Persistent storage**: Notifications are stored in database, not local state
+- **Unread indicators**: Blue highlight for unread notifications
+- **Removed toast popups**: Status notifications now only appear in bell icon, not as pop-up toasts
+
+#### 📋 My Appointments (MyAppointments.tsx)
+- **Removed toast notifications**: No more pop-up notifications on page load
+- **Updated status labels**: "Awaiting Approval" for pending appointments
+- **Staff display**: Shows "To be assigned" when no staff assigned yet
+
+#### 👤 User Profile & Settings
+- **Avatar upload**: New profile page with avatar upload functionality
+- **Settings page**: Account settings, notification preferences, security settings
+- **Address with coordinates**: Profile can store location coordinates from map selection
+
+#### 🗺️ Map Component (NEW)
+- **MapSelector component**: Reusable Leaflet map with address search
+- **Geocoding**: Uses OpenStreetMap Nominatim API for address lookup
+- **Click-to-select**: Users can click map to select location
+- **Search suggestions**: Address autocomplete with suggestions dropdown
+
+#### 🎨 UI/UX Enhancements
+- **Landing pages**: Updated Home, About, Services, Portfolio with new content and styling
+- **Footer**: Improved layout with better navigation links
+- **Auth pages**: Enhanced Login, Register, ForgotPassword designs
+- **New pages**: Privacy Policy, Terms of Service pages added
+
+#### 📡 API Services (services.ts)
+- **Notification API**: Added `notificationApi` with `getAll`, `getUnreadCount`, `markAsRead`, `markAllAsRead`, `delete` methods
+
+#### 🛠️ Other Improvements
+- **New utility functions**: Image URL helper, etc.
+- **Type definitions**: Extended TypeScript types for new features
+- **Leaflet integration**: Added `leaflet` and `react-leaflet` packages
+
+## �👥 Contributors
 
 - Development Team
 

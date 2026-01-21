@@ -13,6 +13,16 @@ export interface User {
     lastName?: string;
     phone?: string;
     address?: Address;
+    avatar?: string;
+  };
+  notifications?: {
+    email: {
+        appointments?: boolean;
+        payments?: boolean;
+        marketing?: boolean;
+        security?: boolean;
+        updates?: boolean;
+    }
   };
   avatar?: string;
   isVerified: boolean;
@@ -28,7 +38,12 @@ export interface Address {
   city?: string;
   province?: string;
   zipCode?: string;
+  country?: string;
   landmark?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export type UserRole =

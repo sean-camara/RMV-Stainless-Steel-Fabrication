@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { appointmentApi } from '../../../api/services';
-import { useNotification } from '../../../contexts/NotificationContext';
 
 interface SiteAddress {
   street?: string;
@@ -40,37 +39,12 @@ const MyAppointments: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(false);
   const detailsContentRef = useRef<HTMLDivElement | null>(null);
-  const { notify } = useNotification();
-  const seenNotifications = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fetchAppointments();
   }, []);
 
-  useEffect(() => {
-    appointments.forEach((appt) => {
-      const key = `${appt._id}-${appt.status}`;
-      if (seenNotifications.current.has(key)) return;
-
-      if (appt.status === 'cancelled') {
-        notify({
-          type: 'warning',
-          title: 'Appointment cancelled',
-          message: `Your appointment ${appt._id} was cancelled by our team.`,
-          persist: true,
-        });
-        seenNotifications.current.add(key);
-      } else if (appt.status === 'scheduled' || appt.status === 'confirmed') {
-        notify({
-          type: 'success',
-          title: 'Appointment accepted',
-          message: `Your appointment ${appt._id} has been scheduled.`,
-          persist: true,
-        });
-        seenNotifications.current.add(key);
-      }
-    });
-  }, [appointments, notify]);
+  // Notification toasts removed - status updates now appear in the notification bell only
 
   useEffect(() => {
     const el = detailsContentRef.current;
@@ -111,6 +85,7 @@ const MyAppointments: React.FC = () => {
       completed: 'bg-slate-100 text-slate-700 border-slate-200',
       cancelled: 'bg-red-50 text-red-700 border-red-200',
       rescheduled: 'bg-blue-50 text-blue-700 border-blue-200',
+      declined: 'bg-red-50 text-red-700 border-red-200',
     };
     return colors[status] || 'bg-slate-50 text-slate-700 border-slate-200';
   };
@@ -137,6 +112,7 @@ const MyAppointments: React.FC = () => {
           </svg>
         );
       case 'cancelled':
+      case 'declined':
         return (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -148,7 +124,16 @@ const MyAppointments: React.FC = () => {
   };
 
   const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const statusLabels: Record<string, string> = {
+      pending: 'Awaiting Approval',
+      scheduled: 'Scheduled',
+      confirmed: 'Confirmed',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      declined: 'Declined',
+      rescheduled: 'Rescheduled',
+    };
+    return statusLabels[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   const formatDate = (dateString: string) => {

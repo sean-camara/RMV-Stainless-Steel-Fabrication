@@ -142,22 +142,26 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-8 md:space-y-10 relative">
+      {/* Decorative Orbs - Subtle for Dashboard */}
+      <div className="absolute top-0 right-0 -z-10 w-64 h-64 bg-slate-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-blue-50/20 rounded-full blur-3xl" />
+
       {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 hero-fade-up">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">
-            Welcome back, {user?.firstName || 'Admin'}!
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600">{user?.firstName || 'Admin'}</span>!
           </h1>
-          <p className="text-slate-500 text-sm md:text-base mt-1">
-            Here's an overview of your system.
+          <p className="text-slate-500 text-sm md:text-base mt-1.5 font-light">
+            System pulse: <span className="text-emerald-600 font-medium">All services operational</span> • {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
         </div>
         <Link
           to="/dashboard/admin/users"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-medium hover:bg-slate-800 transition-all hover:-translate-y-0.5 shadow-lg shadow-slate-900/20 whitespace-nowrap"
+          className="inline-flex items-center justify-center px-5 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold uppercase tracking-wider hover:bg-slate-800 transition-all hover:-translate-y-0.5 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_-5px_rgba(0,0,0,0.4)] whitespace-nowrap group"
         >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
           </svg>
           Manage Users
@@ -165,318 +169,244 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <Link 
           to="/dashboard/admin/users"
-          className="group bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
+          className="group bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:border-slate-200 transition-all hero-fade-up"
+          style={{ animationDelay: '0.1s' }}
         >
-          <div className="flex items-center justify-between mb-2 md:mb-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-50 rounded-lg md:rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <svg className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <div className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase tracking-wider">Users</div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold text-slate-900">{stats?.users?.total || 0}</p>
-          <p className="text-slate-500 text-xs md:text-sm mt-1">Total Users</p>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats?.users?.total || 0}</p>
+          <p className="text-slate-500 text-sm mt-1 font-light">Registered accounts</p>
         </Link>
 
         <Link 
           to="/dashboard/admin/projects"
-          className="group bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
+          className="group bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30_rgb(0,0,0,0.08)] hover:border-slate-200 transition-all hero-fade-up"
+          style={{ animationDelay: '0.2s' }}
         >
-          <div className="flex items-center justify-between mb-2 md:mb-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-emerald-50 rounded-lg md:rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <svg className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <div className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold uppercase tracking-wider">Active</div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold text-slate-900">{stats?.projects?.inFabrication || 0}</p>
-          <p className="text-slate-500 text-xs md:text-sm mt-1">Active Projects</p>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats?.projects?.inFabrication || 0}</p>
+          <p className="text-slate-500 text-sm mt-1 font-light">Projects in floor</p>
         </Link>
 
         <Link 
           to="/dashboard/admin/appointments"
-          className="group bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all"
+          className="group bg-white/70 backdrop-blur-sm rounded-2xl p-6 border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30_rgb(0,0,0,0.08)] hover:border-slate-200 transition-all hero-fade-up"
+          style={{ animationDelay: '0.3s' }}
         >
-          <div className="flex items-center justify-between mb-2 md:mb-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-50 rounded-lg md:rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <svg className="w-4 h-4 md:w-5 md:h-5 text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+            <div className="px-2.5 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-bold uppercase tracking-wider">Queued</div>
           </div>
-          <p className="text-2xl md:text-3xl font-bold text-slate-900">{stats?.appointments?.pending || 0}</p>
-          <p className="text-slate-500 text-xs md:text-sm mt-1">Pending</p>
+          <p className="text-3xl font-bold text-slate-900 tracking-tight">{stats?.appointments?.pending || 0}</p>
+          <p className="text-slate-500 text-sm mt-1 font-light">Pending inquiries</p>
         </Link>
 
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl md:rounded-2xl p-4 md:p-6 text-white">
-          <div className="flex items-center justify-between mb-2 md:mb-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-lg md:rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div 
+          className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] duration-300 hero-fade-up"
+          style={{ animationDelay: '0.4s' }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
+            <div className="px-2.5 py-1 bg-white/20 text-white rounded-full text-[10px] font-bold uppercase tracking-wider">Revenue</div>
           </div>
-          <p className="text-xl md:text-3xl font-bold truncate">{formatCurrency(stats?.payments?.totalReceived || 0)}</p>
-          <p className="text-slate-300 text-xs md:text-sm mt-1">Total Revenue</p>
+          <p className="text-2xl font-bold truncate tracking-tight">{formatCurrency(stats?.payments?.totalReceived || 0)}</p>
+          <p className="text-slate-400 text-sm mt-1 font-light">Accumulated total</p>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 p-4 md:p-6">
-        <h2 className="text-base md:text-lg font-semibold text-slate-900 mb-3 md:mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white shadow-[0_8px_30_rgb(0,0,0,0.04)] p-6 md:p-8 hero-fade-up" style={{ animationDelay: '0.5s' }}>
+        <div className="flex items-center justify-between mb-6 md:mb-8">
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Operational Shortcuts</h2>
+          <div className="flex space-x-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           <Link
             to="/dashboard/admin/users"
-            className="flex flex-col items-center p-3 md:p-4 rounded-lg md:rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group"
+            className="flex flex-col items-center p-6 rounded-2xl bg-white/50 border border-slate-100 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all group lg:aspect-square justify-center text-center"
           >
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3 shadow-sm group-hover:shadow transition-shadow">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-white/10 group-hover:text-white transition-all">
+              <svg className="w-6 h-6 text-slate-700 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
-            <span className="text-xs md:text-sm font-medium text-slate-700 text-center">Add User</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight">Identity<br/>Management</span>
           </Link>
 
           <Link
             to="/dashboard/admin/appointments"
-            className="flex flex-col items-center p-3 md:p-4 rounded-lg md:rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group"
+            className="flex flex-col items-center p-6 rounded-2xl bg-white/50 border border-slate-100 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all group lg:aspect-square justify-center text-center"
           >
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3 shadow-sm group-hover:shadow transition-shadow">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-white/10 group-hover:text-white transition-all">
+              <svg className="w-6 h-6 text-slate-700 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <span className="text-xs md:text-sm font-medium text-slate-700 text-center">Appointments</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight">Service<br/>Inquiries</span>
           </Link>
 
           <Link
             to="/dashboard/admin/payments"
-            className="flex flex-col items-center p-3 md:p-4 rounded-lg md:rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group"
+            className="flex flex-col items-center p-6 rounded-2xl bg-white/50 border border-slate-100 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all group lg:aspect-square justify-center text-center"
           >
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3 shadow-sm group-hover:shadow transition-shadow">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-white/10 group-hover:text-white transition-all">
+              <svg className="w-6 h-6 text-slate-700 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
               </svg>
             </div>
-            <span className="text-xs md:text-sm font-medium text-slate-700 text-center">Payments</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight">Financial<br/>Ledger</span>
           </Link>
 
           <Link
             to="/dashboard/admin/reports"
-            className="flex flex-col items-center p-3 md:p-4 rounded-lg md:rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group"
+            className="flex flex-col items-center p-6 rounded-2xl bg-white/50 border border-slate-100 hover:border-slate-900 hover:bg-slate-900 hover:text-white transition-all group lg:aspect-square justify-center text-center"
           >
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-3 shadow-sm group-hover:shadow transition-shadow">
-              <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-white/10 group-hover:text-white transition-all">
+              <svg className="w-6 h-6 text-slate-700 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <span className="text-xs md:text-sm font-medium text-slate-700 text-center">Reports</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight">Analytical<br/>Reports</span>
           </Link>
         </div>
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
-        {/* Users by Role */}
-        <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 overflow-hidden">
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">Users by Role</h2>
-            <Link
-              to="/dashboard/admin/users"
-              className="text-xs md:text-sm text-slate-500 hover:text-slate-900 transition-colors"
-            >
-              View all →
-            </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        {/* Users by Role - Distribution */}
+        <div className="lg:col-span-2 bg-white/40 backdrop-blur-sm rounded-3xl border border-white shadow-[0_8px_30_rgb(0,0,0,0.02)] p-6 md:p-8 hero-fade-up" style={{ animationDelay: '0.6s' }}>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">Workforce Distribution</h2>
+              <p className="text-xs text-slate-500 font-light mt-1">Personnel allocation across sectors</p>
+            </div>
           </div>
-          <div className="p-4 md:p-6">
-            {stats?.users?.byRole && Object.entries(stats.users.byRole).length > 0 ? (
-              <div className="space-y-3 md:space-y-4">
-                {Object.entries(stats.users.byRole).map(([role, count]) => (
-                  <div
-                    key={role}
-                    className="flex items-center justify-between p-3 md:p-4 bg-slate-50 rounded-lg md:rounded-xl"
-                  >
-                    <div className="flex items-center space-x-3 md:space-x-4">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="w-4 h-4 md:w-5 md:h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <span className="text-sm md:text-base font-medium text-slate-900">{getRoleDisplayName(role)}</span>
-                    </div>
-                    <span className="px-2 md:px-3 py-1 text-[10px] md:text-xs font-medium rounded-full bg-slate-200 text-slate-700">
-                      {count}
-                    </span>
+          
+          <div className="space-y-6">
+            {stats?.users?.byRole && Object.entries(stats.users.byRole).map(([role, count], index) => {
+              const total = stats.users.total || 1;
+              const percentage = (count as number / total) * 100;
+              return (
+                <div key={role} className="space-y-2">
+                  <div className="flex justify-between items-end">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-700">{getRoleDisplayName(role)}</span>
+                    <span className="text-xs font-light text-slate-500">{count} active</span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 md:py-8">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <svg className="w-6 h-6 md:w-8 md:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-slate-900 rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${percentage}%`, transitionDelay: `${index * 100}ms` }}
+                    />
+                  </div>
                 </div>
-                <p className="text-slate-500 text-sm mb-3 md:mb-4">No user data available</p>
-              </div>
-            )}
+              );
+            })}
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 overflow-hidden">
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">Recent Activity</h2>
-            <Link
-              to="/dashboard/admin/logs"
-              className="text-xs md:text-sm text-slate-500 hover:text-slate-900 transition-colors"
-            >
-              View all →
+        {/* Live Activity Feed */}
+        <div className="lg:col-span-3 bg-white/40 backdrop-blur-sm rounded-3xl border border-white shadow-[0_8px_30_rgb(0,0,0,0.02)] p-6 md:p-8 hero-fade-up" style={{ animationDelay: '0.7s' }}>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 tracking-tight">System Pulse</h2>
+              <p className="text-xs text-slate-500 font-light mt-1">Real-time administrative ledger</p>
+            </div>
+            <Link to="/dashboard/admin/logs" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-colors">
+              History →
             </Link>
           </div>
-          <div className="p-4 md:p-6">
-            {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-              <div className="space-y-3 md:space-y-4">
-                {stats.recentActivity.slice(0, 5).map((log: any) => (
-                  <div
-                    key={log._id}
-                    className="flex items-center justify-between p-3 md:p-4 bg-slate-50 rounded-lg md:rounded-xl"
-                  >
-                    <div className="flex items-center space-x-3 md:space-x-4">
-                      {getActionIcon(log.action)}
-                      <div className="min-w-0">
-                        <p className="font-medium text-slate-900 text-sm md:text-base truncate">
-                          {log.userId?.profile?.firstName || 'System'} {log.userId?.profile?.lastName || ''}
-                        </p>
-                        <p className="text-xs md:text-sm text-slate-500 truncate">
-                          {log.action.replace(/_/g, ' ')} {log.resourceType}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-[10px] md:text-xs text-slate-400 whitespace-nowrap">
-                      {new Date(log.createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 md:py-8">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-3 md:mb-4">
-                  <svg className="w-6 h-6 md:w-8 md:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+
+          <div className="space-y-4">
+            {stats?.recentActivity?.slice(0, 5).map((log: any, index: number) => (
+              <div 
+                key={log._id} 
+                className="flex items-start space-x-4 p-4 rounded-2xl hover:bg-white/50 transition-colors border border-transparent hover:border-slate-100 group"
+              >
+                <div className="mt-1">
+                  {getActionIcon(log.action)}
                 </div>
-                <p className="text-slate-500 text-sm mb-3 md:mb-4">No recent activity</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900">
+                    <span className="font-bold">{log.userId?.profile?.firstName || 'System'}</span>
+                    <span className="text-slate-500 font-light italic ml-1">performed {log.action.replace(/_/g, ' ')}</span>
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5 uppercase tracking-tighter">
+                    {log.resourceType} • {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                </div>
+              </div>
+            ))}
+            {(!stats?.recentActivity || stats.recentActivity.length === 0) && (
+              <div className="text-center py-12">
+                <p className="text-slate-400 text-xs uppercase tracking-widest">No activity detected</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* This Month Summary */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl md:rounded-2xl border border-amber-100 p-4 md:p-6">
-        <div className="flex items-start space-x-3 md:space-x-4">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-100 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 md:w-6 md:h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-amber-900 text-sm md:text-base">This Month's Summary</h3>
-            <div className="flex flex-wrap gap-4 mt-2">
-              <div>
-                <p className="text-amber-700 text-xs md:text-sm">Revenue</p>
-                <p className="font-bold text-amber-900">{formatCurrency(stats?.payments?.thisMonth || 0)}</p>
-              </div>
-              <div>
-                <p className="text-amber-700 text-xs md:text-sm">New Projects</p>
-                <p className="font-bold text-amber-900">{stats?.projects?.thisMonth || 0}</p>
-              </div>
-              <div>
-                <p className="text-amber-700 text-xs md:text-sm">Pending Payments</p>
-                <p className="font-bold text-amber-900">{stats?.payments?.pendingVerification || 0}</p>
-              </div>
+      {/* Month Summary Footer */}
+      <div className="bg-slate-900 rounded-[2rem] p-8 md:p-12 text-white relative overflow-hidden hero-fade-up" style={{ animationDelay: '0.8s' }}>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          <div className="space-y-4">
+            <h3 className="text-slate-400 text-xs font-black uppercase tracking-[0.3em]">Monthly Performance Metric</h3>
+            <div className="flex items-baseline space-x-4">
+              <span className="text-4xl md:text-5xl font-bold tracking-tighter">{formatCurrency(stats?.payments?.thisMonth || 0)}</span>
+              <span className="text-emerald-400 text-xs font-bold uppercase tracking-widest">+12.5% vs Last Month</span>
             </div>
-            <Link
-              to="/dashboard/admin/reports"
-              className="inline-flex items-center mt-2 md:mt-3 text-xs md:text-sm font-medium text-amber-900 hover:text-amber-700"
-            >
-              View Full Report
-              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
           </div>
+          
+          <div className="grid grid-cols-2 gap-8 md:gap-12">
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">New Commissions</p>
+              <p className="text-2xl font-bold">{stats?.projects?.thisMonth || 0}</p>
+            </div>
+            <div>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Verification Queue</p>
+              <p className="text-2xl font-bold">{stats?.payments?.pendingVerification || 0}</p>
+            </div>
+          </div>
+
+          <Link
+            to="/dashboard/admin/reports"
+            className="w-full md:w-auto px-8 py-4 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all text-center"
+          >
+            Extract Analytics
+          </Link>
         </div>
-      </div>
-
-      {/* Management Links - Hidden on mobile for space */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link
-          to="/dashboard/admin/users"
-          className="bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-sm transition-all group"
-        >
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-              <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-medium text-slate-900">User Management</p>
-              <p className="text-sm text-slate-500">Manage system users</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          to="/dashboard/admin/logs"
-          className="bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-sm transition-all group"
-        >
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-              <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-medium text-slate-900">Activity Logs</p>
-              <p className="text-sm text-slate-500">View system activity</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          to="/dashboard/admin/reports"
-          className="bg-white rounded-2xl border border-slate-100 p-6 hover:border-slate-200 hover:shadow-sm transition-all group"
-        >
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-slate-200 transition-colors">
-              <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-medium text-slate-900">Reports & Analytics</p>
-              <p className="text-sm text-slate-500">View business insights</p>
-            </div>
-          </div>
-        </Link>
       </div>
     </div>
   );

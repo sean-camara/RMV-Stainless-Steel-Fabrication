@@ -159,68 +159,72 @@ const PaymentVerification: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 relative">
+      {/* Decorative Orbs */}
+      <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-amber-50/50 rounded-full blur-3xl opacity-50" />
+      <div className="absolute bottom-0 left-0 -z-10 w-64 h-64 bg-slate-100/50 rounded-full blur-3xl" />
+
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Payment Verification</h1>
-        <p className="text-slate-400 mt-1">Review and verify customer payment proofs</p>
+      <div className="hero-fade-up">
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Payment Verification</h1>
+        <p className="text-slate-500 mt-2 font-light">Review and verify customer payment proofs</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-yellow-500/10 border-yellow-500/30">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 hero-fade-up" style={{ animationDelay: '0.1s' }}>
+        <Card className="bg-white/70 backdrop-blur-sm border-white shadow-sm hover:shadow-md transition-all">
           <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-400" />
+            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+              <Clock className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{pendingPayments.length}</p>
-              <p className="text-sm text-yellow-200">Pending Review</p>
+              <p className="text-2xl font-bold text-slate-900">{pendingPayments.length}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Pending Review</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-cyan-500/10 border-cyan-500/30">
+        <Card className="bg-white/70 backdrop-blur-sm border-white shadow-sm hover:shadow-md transition-all">
           <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-cyan-400" />
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">
+              <p className="text-2xl font-bold text-slate-900">
                 ₱{totalPendingAmount.toLocaleString()}
               </p>
-              <p className="text-sm text-cyan-200">Pending Amount</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Pending Amount</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-green-500/10 border-green-500/30">
+        <Card className="bg-white/70 backdrop-blur-sm border-white shadow-sm hover:shadow-md transition-all">
           <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-400" />
+            <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{todayVerified.length}</p>
-              <p className="text-sm text-green-200">Verified Today</p>
+              <p className="text-2xl font-bold text-slate-900">{todayVerified.length}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Verified Today</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-500/10 border-purple-500/30">
+        <Card className="bg-white/70 backdrop-blur-sm border-white shadow-sm hover:shadow-md transition-all">
           <CardContent className="flex items-center gap-4 py-4">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <CreditCard className="w-6 h-6 text-purple-400" />
+            <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center">
+              <CreditCard className="w-6 h-6 text-slate-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{payments.length}</p>
-              <p className="text-sm text-purple-200">Total Payments</p>
+              <p className="text-2xl font-bold text-slate-900">{payments.length}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Total Payments</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-white/70 backdrop-blur-sm border-white shadow-sm hero-fade-up" style={{ animationDelay: '0.2s' }}>
         <CardContent className="py-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -228,7 +232,8 @@ const PaymentVerification: React.FC = () => {
                 placeholder="Search by project, customer, or reference..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                icon={<Search className="w-4 h-4" />}
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+                className="bg-white border-slate-200 focus:border-amber-500 focus:ring-amber-500"
               />
             </div>
             <div className="w-full md:w-48">
@@ -244,6 +249,7 @@ const PaymentVerification: React.FC = () => {
                   { value: 'verified', label: 'Verified' },
                   { value: 'rejected', label: 'Rejected' },
                 ]}
+                className="bg-white border-slate-200 focus:border-amber-500 focus:ring-amber-500"
               />
             </div>
           </div>
@@ -251,23 +257,23 @@ const PaymentVerification: React.FC = () => {
       </Card>
 
       {/* Payments Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-cyan-400" />
+      <Card className="bg-white/70 backdrop-blur-sm border-white shadow-sm hero-fade-up" style={{ animationDelay: '0.3s' }}>
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="flex items-center gap-2 text-slate-900">
+            <Filter className="w-5 h-5 text-amber-500" />
             Payments
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Customer & Project</TableHead>
-                <TableHead>Stage</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Reference</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="border-b border-slate-100">
+                <TableHead className="text-slate-500 font-semibold">Customer & Project</TableHead>
+                <TableHead className="text-slate-500 font-semibold">Stage</TableHead>
+                <TableHead className="text-slate-500 font-semibold">Amount</TableHead>
+                <TableHead className="text-slate-500 font-semibold">Reference</TableHead>
+                <TableHead className="text-slate-500 font-semibold">Status</TableHead>
+                <TableHead className="text-right text-slate-500 font-semibold">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -275,43 +281,45 @@ const PaymentVerification: React.FC = () => {
                 <TableEmpty
                   colSpan={6}
                   message="No payments found"
-                  icon={<CreditCard className="w-12 h-12 text-slate-600" />}
+                  icon={<CreditCard className="w-12 h-12 text-slate-300" />}
                 />
               ) : (
                 filteredPayments.map((payment) => (
-                  <TableRow key={payment._id}>
+                  <TableRow key={payment._id} className="border-b border-slate-100 hover:bg-slate-50/50">
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-600 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-slate-300" />
+                        <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-slate-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-white">
+                          <p className="font-medium text-slate-900">
                             {payment.customerId?.firstName} {payment.customerId?.lastName}
                           </p>
-                          <p className="text-sm text-slate-400">
+                          <p className="text-sm text-slate-500">
                             {payment.projectId?.projectName || 'N/A'}
                           </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-slate-300">
+                      <span className="text-slate-600 font-medium">
                         {getPaymentStageLabel(payment.stage)}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <p className="font-bold text-white">
-                        ₱{payment.amount.toLocaleString()}
-                      </p>
+                      <span className="font-bold text-slate-900">
+                        ₱{(payment.amount?.expected || 0).toLocaleString()}
+                      </span>
                     </TableCell>
                     <TableCell>
-                      <p className="text-slate-400">{payment.referenceNumber || 'N/A'}</p>
+                      <span className="font-mono text-sm text-slate-500">
+                        {payment.referenceNumber || '—'}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={payment.status} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -319,8 +327,9 @@ const PaymentVerification: React.FC = () => {
                           setSelectedPayment(payment);
                           setShowDetails(true);
                         }}
-                        icon={<Eye className="w-4 h-4" />}
+                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                       >
+                        <Eye className="w-4 h-4 mr-1" />
                         Review
                       </Button>
                     </TableCell>
