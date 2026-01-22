@@ -148,24 +148,42 @@ const AdminDashboard: React.FC = () => {
       <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-blue-50/20 rounded-full blur-3xl" />
 
       {/* Welcome Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 hero-fade-up">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
-            Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 to-slate-600">{user?.firstName || 'Admin'}</span>!
-          </h1>
-          <p className="text-slate-500 text-sm md:text-base mt-1.5 font-light">
-            System pulse: <span className="text-emerald-600 font-medium">All services operational</span> • {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
-          </p>
+      <div className="relative overflow-hidden bg-white rounded-[2rem] border border-slate-100 p-8 md:p-10 shadow-sm hero-fade-up">
+        {/* Background Accent */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-slate-50 rounded-full blur-3xl opacity-50" />
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-8">
+          <div>
+            <div className="flex items-center gap-3 mb-4 justify-center sm:justify-start">
+              <span className="h-px w-8 bg-slate-200" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">System Overview</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight text-center sm:text-left leading-tight">
+              Welcome back, <span className="text-slate-400 font-light italic">{user?.firstName || 'Admin'}!</span>
+            </h1>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-6">
+              <div className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-emerald-100">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                All services operational
+              </div>
+              <div className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-wider border border-slate-100">
+                {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+              </div>
+            </div>
+          </div>
+          
+          <Link
+            to="/dashboard/admin/users"
+            className="flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-slate-200 whitespace-nowrap group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center group-hover:rotate-12 transition-transform">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            Manage Users
+          </Link>
         </div>
-        <Link
-          to="/dashboard/admin/users"
-          className="inline-flex items-center justify-center px-5 py-3 bg-slate-900 text-white rounded-xl text-sm font-bold uppercase tracking-wider hover:bg-slate-800 transition-all hover:-translate-y-0.5 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_-5px_rgba(0,0,0,0.4)] whitespace-nowrap group"
-        >
-          <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-          </svg>
-          Manage Users
-        </Link>
       </div>
 
       {/* Stats Cards */}

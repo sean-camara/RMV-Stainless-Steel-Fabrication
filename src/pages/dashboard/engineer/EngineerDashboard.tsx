@@ -31,7 +31,7 @@ const EngineerDashboard: React.FC = () => {
         projectApi.getAll({ limit: 100 }) // Fetching a batch to filter locally for now
       ]);
 
-      const pendingCount = pendingRes?.data?.length || pendingRes?.length || 0;
+      const pendingCount = pendingRes?.data?.projects?.length || 0;
       const allProjects = allRes?.data?.projects || allRes?.projects || [];
       
       const inProgressCount = allProjects.filter((p: any) => 
@@ -90,9 +90,9 @@ const EngineerDashboard: React.FC = () => {
             className="inline-flex items-center justify-center px-5 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] hover:bg-slate-800 transition-all hover:-translate-y-0.5 shadow-lg shadow-slate-900/20"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            New Project
+            View Projects
           </Link>
         </div>
       </div>
@@ -149,9 +149,9 @@ const EngineerDashboard: React.FC = () => {
         Engineering Controls
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hero-fade-up" style={{ animationDelay: '0.4s' }}>
-        {/* Pending Card */}
+        {/* Pending Blueprint Card */}
         <Link 
-          to="/dashboard/engineer/projects?status=pending_review"
+          to="/dashboard/engineer/projects?status=pending_blueprint"
           className="group relative overflow-hidden rounded-2xl bg-white border border-slate-100 p-6 hover:shadow-xl transition-all hover:-translate-y-1"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-amber-100/50" />
@@ -159,19 +159,19 @@ const EngineerDashboard: React.FC = () => {
             <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mb-4 text-amber-600 group-hover:scale-110 transition-transform">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Blueprint Review</h3>
+            <h3 className="text-lg font-bold text-slate-900">Pending Blueprints</h3>
             <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-              Review and approve architectural blueprints for pending projects. 
-              {stats.pendingBlueprints > 0 && <span className="block mt-2 font-medium text-amber-600">{stats.pendingBlueprints} items waiting.</span>}
+              Create CAD blueprints for projects submitted by sales staff.
+              {stats.pendingBlueprints > 0 && <span className="block mt-2 font-medium text-amber-600">{stats.pendingBlueprints} projects waiting.</span>}
             </p>
             <div className="mt-4 flex items-center text-sm font-bold text-amber-600 group-hover:gap-2 transition-all">
-              <span>Start Review</span>
+              <span>View Pending</span>
               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </div>
           </div>
         </Link>
 
-        {/* Technical Specs */}
+        {/* All Projects */}
         <Link 
           to="/dashboard/engineer/projects"
           className="group relative overflow-hidden rounded-2xl bg-white border border-slate-100 p-6 hover:shadow-xl transition-all hover:-translate-y-1"
@@ -181,33 +181,33 @@ const EngineerDashboard: React.FC = () => {
             <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mb-4 text-indigo-600 group-hover:scale-110 transition-transform">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Technical Specifications</h3>
+            <h3 className="text-lg font-bold text-slate-900">All Projects</h3>
             <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-              Manage material requirements, structural calculations, and project costing data.
+              View all assigned projects, manage blueprints, costing, and track approvals.
             </p>
             <div className="mt-4 flex items-center text-sm font-bold text-indigo-600 group-hover:gap-2 transition-all">
-              <span>Access Specs</span>
+              <span>View All</span>
               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </div>
           </div>
         </Link>
 
-        {/* Fabrication Monitor */}
+        {/* Awaiting Customer Approval */}
         <Link 
-          to="/dashboard/engineer/projects?status=fabrication"
+          to="/dashboard/engineer/projects?status=pending_customer_approval"
           className="group relative overflow-hidden rounded-2xl bg-white border border-slate-100 p-6 hover:shadow-xl transition-all hover:-translate-y-1"
         >
-          <div className="absolute top-0 right-0 w-32 h-32 bg-slate-100 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-slate-200/50" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-emerald-100/50" />
           <div className="relative z-10">
-            <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center mb-4 text-slate-600 group-hover:scale-110 transition-transform">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mb-4 text-emerald-600 group-hover:scale-110 transition-transform">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <h3 className="text-lg font-bold text-slate-900">Fabrication Status</h3>
+            <h3 className="text-lg font-bold text-slate-900">Awaiting Approval</h3>
             <p className="text-slate-500 text-sm mt-2 leading-relaxed">
-              Monitor factory floor progress and quality control checks for active builds.
+              Track projects submitted for customer approval and handle revision requests.
             </p>
-            <div className="mt-4 flex items-center text-sm font-bold text-slate-600 group-hover:gap-2 transition-all">
-              <span>View Production</span>
+            <div className="mt-4 flex items-center text-sm font-bold text-emerald-600 group-hover:gap-2 transition-all">
+              <span>View Status</span>
               <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </div>
           </div>

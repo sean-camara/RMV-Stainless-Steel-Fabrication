@@ -44,8 +44,6 @@ const MyAppointments: React.FC = () => {
     fetchAppointments();
   }, []);
 
-  // Notification toasts removed - status updates now appear in the notification bell only
-
   useEffect(() => {
     const el = detailsContentRef.current;
     if (!el || !showDetailModal) return;
@@ -77,49 +75,23 @@ const MyAppointments: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: 'bg-amber-50 text-amber-700 border-amber-200',
-      scheduled: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-      confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      completed: 'bg-slate-100 text-slate-700 border-slate-200',
-      cancelled: 'bg-red-50 text-red-700 border-red-200',
-      rescheduled: 'bg-blue-50 text-blue-700 border-blue-200',
-      declined: 'bg-red-50 text-red-700 border-red-200',
-    };
-    return colors[status] || 'bg-slate-50 text-slate-700 border-slate-200';
-  };
-
-  const getStatusIcon = (status: string) => {
+  const statusStyles = (status: string) => {
     switch (status) {
-      case 'pending':
-        return (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
       case 'confirmed':
+        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
       case 'scheduled':
-        return (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        );
+        return 'text-blue-700 bg-blue-50 border-blue-200'; // Standard blue instead of cyan
       case 'completed':
-        return (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        );
+        return 'text-slate-600 bg-slate-100 border-slate-200';
       case 'cancelled':
       case 'declined':
-        return (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        );
+        return 'text-red-700 bg-red-50 border-red-200';
+      case 'pending':
+        return 'text-amber-700 bg-amber-50 border-amber-200';
+      case 'rescheduled':
+        return 'text-orange-700 bg-orange-50 border-orange-200';
       default:
-        return null;
+        return 'text-slate-600 bg-slate-100 border-slate-200';
     }
   };
 
@@ -136,14 +108,6 @@ const MyAppointments: React.FC = () => {
     return statusLabels[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-PH', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
   const formatFullDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-PH', {
       weekday: 'long',
@@ -151,22 +115,6 @@ const MyAppointments: React.FC = () => {
       day: 'numeric',
       year: 'numeric',
     });
-  };
-
-  const getAppointmentTypeIcon = (type?: string) => {
-    if (type === 'ocular_visit') {
-      return (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      );
-    }
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-      </svg>
-    );
   };
 
   const formatAddress = (address?: SiteAddress) => {
@@ -186,8 +134,7 @@ const MyAppointments: React.FC = () => {
     const aptDate = new Date(dateString);
     aptDate.setHours(0, 0, 0, 0);
     const diffTime = aptDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
   const openDetailModal = (appointment: Appointment) => {
@@ -205,437 +152,291 @@ const MyAppointments: React.FC = () => {
     })
     .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime());
 
-  // Find next upcoming appointment
   const nextAppointment = appointments.find(apt => {
     const aptDate = new Date(apt.scheduledDate);
-    return aptDate >= now && (apt.status === 'confirmed' || apt.status === 'pending');
+    return aptDate >= now && (apt.status === 'confirmed' || apt.status === 'scheduled');
   });
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-500">Loading your appointments...</p>
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-slate-500 text-sm">Loading appointments...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">My Appointments</h1>
-          <p className="text-slate-500 text-sm md:text-base mt-0.5 md:mt-1">View and manage your consultation appointments</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Appointments</h1>
+          <p className="text-slate-500 mt-1 text-sm">Manage your consultations and site visits</p>
         </div>
         <Link
           to="/dashboard/customer/appointments/new"
-          className="inline-flex items-center justify-center px-4 md:px-5 py-2.5 md:py-3 bg-slate-900 text-white rounded-xl text-sm md:text-base font-medium hover:bg-slate-800 transition-all"
+          className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 text-white hover:bg-slate-800 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow"
         >
-          <svg className="w-4 h-4 md:w-5 md:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           Book Appointment
         </Link>
       </div>
 
-      {/* Next Appointment Card - Highlighted */}
+      {/* Next Appointment Card (Clean Design) */}
       {nextAppointment && filter !== 'past' && (
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-2xl p-4 md:p-6 text-white">
-          <div className="flex items-start justify-between mb-3">
-            <span className="text-xs md:text-sm font-medium text-slate-300 uppercase tracking-wide">Next Appointment</span>
-            {getDaysUntil(nextAppointment.scheduledDate) === 0 && (
-              <span className="px-2 py-0.5 bg-emerald-500 text-white text-xs font-medium rounded-full animate-pulse">
-                Today
-              </span>
-            )}
-            {getDaysUntil(nextAppointment.scheduledDate) === 1 && (
-              <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-medium rounded-full">
-                Tomorrow
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-xl flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-lg md:text-xl font-bold">
-                  {new Date(nextAppointment.scheduledDate).getDate()}
-                </p>
-                <p className="text-[10px] md:text-xs text-slate-300 uppercase">
-                  {new Date(nextAppointment.scheduledDate).toLocaleDateString('en-PH', { month: 'short' })}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="border-l-4 border-slate-900 p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 bg-slate-50 border border-slate-100 rounded-lg flex flex-col items-center justify-center text-slate-900 flex-shrink-0">
+                <span className="text-2xl font-bold leading-none">{new Date(nextAppointment.scheduledDate).getDate()}</span>
+                <span className="text-xs font-semibold uppercase mt-1">{new Date(nextAppointment.scheduledDate).toLocaleDateString('en-PH', { month: 'short' })}</span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Next Up</span>
+                  {getDaysUntil(nextAppointment.scheduledDate) === 0 && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" title="Today" />
+                  )}
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {nextAppointment.appointmentType?.replace(/_/g, ' ') || 'Consultation'}
+                </h3>
+                <p className="text-slate-500 text-sm flex items-center gap-2 mt-1">
+                  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {nextAppointment.scheduledTime || 'Time TBD'} 
+                  {nextAppointment.projectCategory && (
+                   <span className="text-slate-300">•</span>
+                  )}
+                  {nextAppointment.projectCategory && (
+                    <span className="capitalize">{nextAppointment.projectCategory.replace(/_/g, ' ')}</span>
+                  )}
                 </p>
               </div>
             </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm md:text-base">
-                {nextAppointment.scheduledTime || 'Time TBD'}
-              </p>
-              <p className="text-slate-300 text-xs md:text-sm mt-0.5 capitalize">
-                {nextAppointment.appointmentType?.replace(/_/g, ' ') || 'Office Consultation'}
-              </p>
-              {nextAppointment.projectCategory && (
-                <p className="text-slate-400 text-xs mt-1 capitalize">
-                  {nextAppointment.projectCategory.replace(/_/g, ' ')} Project
-                </p>
-              )}
-            </div>
+            
             <button
               onClick={() => openDetailModal(nextAppointment)}
-              className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+              className="w-full md:w-auto px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg text-sm font-medium border border-slate-200 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              View Details
             </button>
           </div>
-          {nextAppointment.appointmentType === 'ocular_visit' && nextAppointment.siteAddress && (
-            <div className="mt-3 pt-3 border-t border-white/20 flex items-start gap-2">
-              <svg className="w-4 h-4 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <p className="text-xs text-slate-300">{formatAddress(nextAppointment.siteAddress)}</p>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Filters - Mobile Scrollable */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
-        {(['all', 'upcoming', 'past'] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap ${
-              filter === f
-                ? 'bg-slate-900 text-white'
-                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            {f === 'all' ? 'All' : f === 'upcoming' ? 'Upcoming' : 'Past'}
-            {f === 'upcoming' && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-white/20 rounded-full">
-                {appointments.filter(a => new Date(a.scheduledDate) >= now && a.status !== 'cancelled').length}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Tabs */}
+      <div className="border-b border-slate-200">
+        <div className="flex gap-6 overflow-x-auto pb-px">
+          {(['all', 'upcoming', 'past'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setFilter(tab)}
+              className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
+                filter === tab 
+                  ? 'text-slate-900 text-base' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {tab === 'all' ? 'All Appointments' : tab === 'upcoming' ? 'Upcoming' : 'Past History'}
+              {filter === tab && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-slate-900 rounded-t-full" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Appointments List */}
-      {filteredAppointments.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-8 md:p-12 text-center">
-          <div className="w-14 h-14 md:w-16 md:h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-7 h-7 md:w-8 md:h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+      {/* List */}
+      <div className="space-y-3">
+        {filteredAppointments.length === 0 ? (
+          <div className="py-12 bg-white rounded-xl border border-dashed border-slate-300 text-center">
+            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <p className="text-slate-900 font-medium">No appointments found</p>
+            <p className="text-slate-500 text-sm mt-1">
+              There are no {filter !== 'all' ? filter : ''} appointments to show.
+            </p>
           </div>
-          <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2">No appointments found</h3>
-          <p className="text-slate-500 mb-6 text-sm md:text-base">
-            {filter === 'upcoming' 
-              ? "You don't have any upcoming appointments."
-              : filter === 'past'
-              ? "You don't have any past appointments."
-              : "You haven't booked any appointments yet."}
-          </p>
-          <Link
-            to="/dashboard/customer/appointments/new"
-            className="inline-flex items-center text-slate-900 font-medium hover:underline text-sm md:text-base"
-          >
-            Book your first appointment →
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredAppointments.map((appointment) => {
-            const daysUntil = getDaysUntil(appointment.scheduledDate);
-            const isToday = daysUntil === 0;
-            const isTomorrow = daysUntil === 1;
-            const isPast = daysUntil < 0 || appointment.status === 'completed' || appointment.status === 'cancelled';
-
+        ) : (
+          filteredAppointments.map((apt) => {
+            const isPast = getDaysUntil(apt.scheduledDate) < 0 || apt.status === 'completed' || apt.status === 'cancelled';
+            
             return (
-              <button
-                key={appointment._id}
-                onClick={() => openDetailModal(appointment)}
-                className={`w-full text-left bg-white rounded-2xl border p-4 md:p-5 hover:border-slate-200 transition-all ${
-                  isToday && !isPast
-                    ? 'border-emerald-200 ring-2 ring-emerald-100'
-                    : isPast
-                      ? 'border-slate-100 opacity-75'
-                      : 'border-slate-100'
+              <div 
+                key={apt._id}
+                onClick={() => openDetailModal(apt)}
+                className={`group bg-white p-4 rounded-xl border border-slate-200 transition-all hover:border-slate-300 hover:shadow-sm cursor-pointer ${
+                  isPast ? 'opacity-80' : ''
                 }`}
               >
-                <div className="flex items-center gap-3 md:gap-4">
-                  {/* Date Box */}
-                  <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex flex-col items-center justify-center flex-shrink-0 ${
-                    isPast 
-                      ? 'bg-slate-100 text-slate-500'
-                      : isToday
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-slate-100 text-slate-900'
+                <div className="flex items-center gap-4">
+                  {/* Date Badge */}
+                  <div className={`flex-shrink-0 w-14 h-14 rounded-lg flex flex-col items-center justify-center border ${
+                    !isPast && getDaysUntil(apt.scheduledDate) === 0
+                      ? 'bg-slate-900 border-slate-900 text-white' 
+                      : 'bg-white border-slate-100 text-slate-700'
                   }`}>
-                    <span className="text-lg md:text-xl font-bold leading-none">
-                      {new Date(appointment.scheduledDate).getDate()}
-                    </span>
-                    <span className="text-[10px] md:text-xs uppercase mt-0.5">
-                      {new Date(appointment.scheduledDate).toLocaleDateString('en-PH', { month: 'short' })}
+                    <span className="text-lg font-bold">{new Date(apt.scheduledDate).getDate()}</span>
+                    <span className={`text-[10px] uppercase font-medium ${!isPast && getDaysUntil(apt.scheduledDate) === 0 ? 'text-slate-300' : 'text-slate-400'}`}>
+                      {new Date(apt.scheduledDate).toLocaleDateString('en-PH', { month: 'short' })}
                     </span>
                   </div>
 
-                  {/* Content */}
+                  {/* Main Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {/* Appointment Type Icon */}
-                      <div className={`p-1 rounded-lg ${
-                        appointment.appointmentType === 'ocular_visit'
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}>
-                        {getAppointmentTypeIcon(appointment.appointmentType)}
-                      </div>
-                      <span className="text-sm md:text-base font-medium text-slate-900">
-                        {appointment.scheduledTime || 'Time TBD'}
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-base font-semibold text-slate-900 truncate pr-2">
+                        {apt.appointmentType?.replace(/_/g, ' ') || 'Consultation'}
+                      </h4>
+                      <span className={`flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusStyles(apt.status)}`}>
+                        {formatStatus(apt.status)}
                       </span>
-                      {isToday && !isPast && (
-                        <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-medium rounded">
-                          Today
-                        </span>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row sm:items-center text-sm text-slate-500 gap-1 sm:gap-4">
+                      <span className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {apt.scheduledTime || 'Time TBD'}
+                      </span>
+                      {apt.projectCategory && (
+                        <span className="hidden sm:inline text-slate-300">•</span>
                       )}
-                      {isTomorrow && !isPast && (
-                        <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
-                          Tomorrow
-                        </span>
+                      {apt.projectCategory && (
+                        <span className="capitalize">{apt.projectCategory.replace(/_/g, ' ')}</span>
                       )}
                     </div>
-                    <p className="text-xs md:text-sm text-slate-500 capitalize truncate">
-                      {appointment.appointmentType?.replace(/_/g, ' ') || 'Office Consultation'}
-                      {appointment.projectCategory && (
-                        <> • {appointment.projectCategory.replace(/_/g, ' ')}</>
-                      )}
-                    </p>
                   </div>
-
-                  {/* Status */}
-                  <div className="flex flex-col items-end gap-2">
-                    <span className={`flex items-center gap-1 px-2 md:px-2.5 py-1 text-[10px] md:text-xs font-medium rounded-full border ${getStatusColor(appointment.status)}`}>
-                      {getStatusIcon(appointment.status)}
-                      <span className="hidden sm:inline">{formatStatus(appointment.status)}</span>
-                    </span>
-                    <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  
+                  {/* Chev */}
+                  <div className="text-slate-300 group-hover:text-slate-500 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
                 </div>
-
-                {/* Address for ocular visit */}
-                {appointment.appointmentType === 'ocular_visit' && appointment.siteAddress && (
-                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-start gap-2">
-                    <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <p className="text-xs text-slate-500 line-clamp-1">{formatAddress(appointment.siteAddress)}</p>
-                  </div>
-                )}
-              </button>
+              </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
-      {/* Detail Modal */}
+      {/* Modal */}
       {showDetailModal && selectedAppointment && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDetailModal(false)} />
-          <div className="relative bg-white w-full md:max-w-md md:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 transition-opacity backdrop-blur-sm" onClick={() => setShowDetailModal(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
               <h2 className="text-lg font-bold text-slate-900">Appointment Details</h2>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-              >
-                <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <button onClick={() => setShowDetailModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div ref={detailsContentRef} className="relative p-4 md:p-6 overflow-y-auto max-h-[70vh] scrollbar-light">
-              {/* Date & Time */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-slate-100 rounded-xl flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-slate-900">
-                    {new Date(selectedAppointment.scheduledDate).getDate()}
-                  </span>
-                  <span className="text-xs text-slate-500 uppercase">
-                    {new Date(selectedAppointment.scheduledDate).toLocaleDateString('en-PH', { month: 'short' })}
-                  </span>
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    {formatFullDate(selectedAppointment.scheduledDate)}
-                  </p>
-                  <p className="text-slate-500">{selectedAppointment.scheduledTime || 'Time to be confirmed'}</p>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="mb-6">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Status</p>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full border ${getStatusColor(selectedAppointment.status)}`}>
-                  {getStatusIcon(selectedAppointment.status)}
-                  {formatStatus(selectedAppointment.status)}
-                </span>
-              </div>
-
-              {/* Appointment Type */}
-              <div className="mb-6">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Type</p>
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                  <div className={`p-2 rounded-lg ${
-                    selectedAppointment.appointmentType === 'ocular_visit'
-                      ? 'bg-blue-100 text-blue-600'
-                      : 'bg-slate-200 text-slate-600'
-                  }`}>
-                    {getAppointmentTypeIcon(selectedAppointment.appointmentType)}
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900 capitalize">
-                      {selectedAppointment.appointmentType?.replace(/_/g, ' ') || 'Office Consultation'}
-                    </p>
-                    {selectedAppointment.projectCategory && (
-                      <p className="text-sm text-slate-500 capitalize">
-                        {selectedAppointment.projectCategory.replace(/_/g, ' ')} Project
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Site Address for Ocular Visit */}
-              {selectedAppointment.appointmentType === 'ocular_visit' && selectedAppointment.siteAddress && (
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Site Location</p>
-                  <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                    <div className="flex items-start gap-3">
-                      <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <div className="text-sm">
-                        <p className="text-slate-900">{selectedAppointment.siteAddress.street}</p>
-                        {selectedAppointment.siteAddress.barangay && (
-                          <p className="text-slate-600">Brgy. {selectedAppointment.siteAddress.barangay}</p>
-                        )}
-                        <p className="text-slate-600">
-                          {selectedAppointment.siteAddress.city}
-                          {selectedAppointment.siteAddress.province && `, ${selectedAppointment.siteAddress.province}`}
-                          {selectedAppointment.siteAddress.zipCode && ` ${selectedAppointment.siteAddress.zipCode}`}
-                        </p>
-                        {selectedAppointment.siteAddress.landmark && (
-                          <p className="text-slate-500 mt-1">
-                            <span className="text-xs">Landmark:</span> {selectedAppointment.siteAddress.landmark}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {selectedAppointment.travelFee !== undefined && selectedAppointment.travelFee > 0 && (
-                      <div className="mt-3 pt-3 border-t border-blue-200 flex items-center justify-between">
-                        <span className="text-sm text-blue-700">Travel Fee</span>
-                        <span className="font-medium text-blue-900">₱{selectedAppointment.travelFee.toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Agent Info */}
-              {selectedAppointment.assignedAgent && (
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Assigned Agent</p>
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
-                    <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-medium text-slate-600">
-                        {selectedAppointment.assignedAgent.firstName?.[0]}{selectedAppointment.assignedAgent.lastName?.[0]}
+            {/* Modal Scroll area */}
+            <div ref={detailsContentRef} className="p-6 overflow-y-auto">
+              <div className="flex flex-col gap-6">
+                
+                {/* Main Status Block */}
+                <div className="flex sm:items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                   <div className="w-12 h-12 bg-white rounded-lg border border-slate-200 flex flex-col items-center justify-center flex-shrink-0">
+                      <span className="text-lg font-bold text-slate-900 leading-none">
+                        {new Date(selectedAppointment.scheduledDate).getDate()}
                       </span>
-                    </div>
-                    <p className="font-medium text-slate-900">
-                      {selectedAppointment.assignedAgent.firstName} {selectedAppointment.assignedAgent.lastName}
-                    </p>
-                  </div>
+                      <span className="text-[10px] uppercase text-slate-500 font-medium">
+                        {new Date(selectedAppointment.scheduledDate).toLocaleDateString('en-PH', { month: 'short' })}
+                      </span>
+                   </div>
+                   <div>
+                      <h3 className="font-semibold text-slate-900">
+                        {selectedAppointment.appointmentType?.replace(/_/g, ' ') || 'Consultation'}
+                      </h3>
+                      <p className="text-sm text-slate-500 mt-1 mb-2">
+                        {formatFullDate(selectedAppointment.scheduledDate)} at {selectedAppointment.scheduledTime || 'Time TBD'}
+                      </p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusStyles(selectedAppointment.status)}`}>
+                        {formatStatus(selectedAppointment.status)}
+                      </span>
+                   </div>
                 </div>
-              )}
 
-              {/* Notes */}
-              {(selectedAppointment.notes?.customerNotes || selectedAppointment.notes?.agentNotes) && (
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-2">Notes</p>
-                  {selectedAppointment.notes?.customerNotes && (
-                    <div className="p-3 bg-slate-50 rounded-xl mb-2">
-                      <p className="text-xs text-slate-500 mb-1">Your notes:</p>
-                      <p className="text-sm text-slate-700">{selectedAppointment.notes.customerNotes}</p>
+                {/* Info Grid */}
+                <div className="grid gap-4">
+                  {selectedAppointment.siteAddress && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Location</label>
+                      <div className="text-sm text-slate-900 bg-white p-3 border border-slate-200 rounded-lg">
+                        <p className="font-medium">{selectedAppointment.siteAddress.street || 'Street not specified'}</p>
+                        <p className="text-slate-500">{formatAddress(selectedAppointment.siteAddress)}</p>
+                        {selectedAppointment.siteAddress.landmark && (
+                           <p className="text-xs text-slate-400 mt-1">Landmark: {selectedAppointment.siteAddress.landmark}</p>
+                        )}
+                      </div>
                     </div>
                   )}
-                  {selectedAppointment.notes?.agentNotes && (
-                    <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
-                      <p className="text-xs text-emerald-600 mb-1">Agent notes:</p>
-                      <p className="text-sm text-emerald-800">{selectedAppointment.notes.agentNotes}</p>
+
+                  {selectedAppointment.assignedAgent && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Assigned To</label>
+                      <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg">
+                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-xs font-bold">
+                          {selectedAppointment.assignedAgent.firstName?.[0]}{selectedAppointment.assignedAgent.lastName?.[0]}
+                        </div>
+                        <span className="text-sm font-medium text-slate-900">
+                          {selectedAppointment.assignedAgent.firstName} {selectedAppointment.assignedAgent.lastName}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {(selectedAppointment.notes?.customerNotes || selectedAppointment.notes?.agentNotes) && (
+                    <div className="space-y-3 pt-2">
+                      {selectedAppointment.notes?.customerNotes && (
+                        <div>
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Your Notes</label>
+                          <p className="mt-1 text-sm text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                            {selectedAppointment.notes.customerNotes}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {selectedAppointment.notes?.agentNotes && (
+                         <div>
+                          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Agent Response</label>
+                          <p className="mt-1 text-sm text-slate-700 bg-blue-50/50 p-3 rounded-lg border border-blue-100/50">
+                            {selectedAppointment.notes.agentNotes}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-
-              {/* Tips for Office Consultation */}
-              {selectedAppointment.appointmentType !== 'ocular_visit' && selectedAppointment.status !== 'completed' && selectedAppointment.status !== 'cancelled' && (
-                <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl">
-                  <p className="text-sm font-medium text-amber-800 mb-2">What to bring:</p>
-                  <ul className="text-xs text-amber-700 space-y-1">
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Photos of the installation area</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Measurements (if available)</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span>•</span>
-                      <span>Design inspirations or references</span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-
-              {showScrollHint && (
-                <>
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent" />
-                  <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={scrollDetails}
-                      className="pointer-events-auto inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800"
-                    >
-                      Scroll to see more
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                </>
-              )}
+              </div>
             </div>
 
             {/* Modal Footer */}
-            {selectedAppointment.status === 'pending' && (
-              <div className="p-4 md:p-6 border-t border-slate-100 bg-slate-50">
-                <p className="text-xs text-slate-500 text-center">
-                  Your appointment is being reviewed. You'll receive a confirmation soon.
-                </p>
-              </div>
-            )}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 bg-white text-slate-700 font-medium text-sm border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

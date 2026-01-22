@@ -120,7 +120,7 @@ const Login: React.FC = () => {
                 <label htmlFor="password" className="block text-sm font-semibold text-slate-700 font-light">
                   Password
                 </label>
-                <Link to="/forgot-password" size="sm" className="text-xs font-light text-slate-500 hover:text-slate-900 transition-colors">
+                <Link to="/forgot-password" title="Recover password" className="text-xs font-light text-slate-500 hover:text-slate-900 transition-colors">
                   Forgot password?
                 </Link>
               </div>

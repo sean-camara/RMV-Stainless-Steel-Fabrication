@@ -118,15 +118,15 @@ export const TableHead: React.FC<TableHeadProps> = ({
   );
 };
 
-interface TableCellProps {
+interface TableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {
   children: React.ReactNode;
   className?: string;
 }
 
-export const TableCell: React.FC<TableCellProps> = ({ children, className = '' }) => {
+export const TableCell: React.FC<TableCellProps> = ({ children, className = '', ...props }) => {
   const variant = useContext(TableVariantContext);
   const textClass = variant === 'light' ? 'text-slate-700' : 'text-slate-300';
-  return <td className={`px-4 py-3 text-sm ${textClass} ${className}`}>{children}</td>;
+  return <td className={`px-4 py-3 text-sm ${textClass} ${className}`} {...props}>{children}</td>;
 };
 
 // Empty state for tables

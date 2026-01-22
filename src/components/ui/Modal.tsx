@@ -27,7 +27,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
   showCloseButton = true,
-  variant = 'dark',
+  variant = 'light',
 }) => {
   // Close on escape key
   useEffect(() => {
@@ -128,12 +128,12 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <div className="space-y-6">
-        <p className="text-slate-300">{message}</p>
+        <p className="text-slate-600">{message}</p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+            className="px-4 py-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
           >
             {cancelText}
           </button>

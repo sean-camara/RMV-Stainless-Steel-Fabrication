@@ -26,17 +26,17 @@ const CashierDashboard: React.FC = () => {
   const fetchStats = async () => {
     try {
       const response = await paymentApi.getAll({ limit: 100 });
-      const payments = response?.data?.payments || response?.payments || [];
+      const payments = response?.data?.data?.payments || response?.data?.payments || response?.payments || [];
       const today = new Date().toDateString();
 
-      const pending = payments.filter((p: any) => p.status === 'pending').length;
+      const pending = payments.filter((p: any) => p.status === 'submitted').length;
       
       const verifiedTodayList = payments.filter((p: any) => 
         p.status === 'verified' && 
         new Date(p.verifiedAt || p.updatedAt).toDateString() === today
       );
 
-      const revenue = verifiedTodayList.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
+      const revenue = verifiedTodayList.reduce((sum: number, p: any) => sum + (p.amount?.received || p.amount?.expected || 0), 0);
 
       setStats({
         pendingVerification: pending,
@@ -87,6 +87,15 @@ const CashierDashboard: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Verify Now
+          </Link>
+          <Link
+            to="/dashboard/cashier/qr-setup"
+            className="inline-flex items-center justify-center px-4 py-3 bg-white text-slate-900 border border-slate-200 rounded-xl text-xs font-bold uppercase tracking-[0.2em] hover:bg-slate-50 transition-all hover:-translate-y-0.5 shadow-sm"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            QR Setup
           </Link>
         </div>
       </div>

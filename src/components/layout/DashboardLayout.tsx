@@ -117,17 +117,27 @@ const getNavItems = (role: UserRole): NavItem[] => {
           path: '/dashboard/agent/appointments',
           icon: (
             <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
           ),
         },
         {
           name: 'Calendar',
-          shortName: 'Calendar',
+          shortName: 'Cal',
           path: '/dashboard/agent/calendar',
           icon: (
             <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          ),
+        },
+        {
+          name: 'Sales Staff',
+          shortName: 'Staff',
+          path: '/dashboard/agent/staff',
+          icon: (
+            <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           ),
         },
@@ -154,16 +164,6 @@ const getNavItems = (role: UserRole): NavItem[] => {
             </svg>
           ),
         },
-        {
-          name: 'Projects',
-          shortName: 'Projects',
-          path: '/dashboard/sales/projects',
-          icon: (
-            <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-          ),
-        },
       ];
     case 'engineer':
       return [
@@ -174,16 +174,6 @@ const getNavItems = (role: UserRole): NavItem[] => {
           icon: (
             <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-            </svg>
-          ),
-        },
-        {
-          name: 'Pending Projects',
-          shortName: 'Pending',
-          path: '/dashboard/engineer/pending',
-          icon: (
-            <svg className="w-6 h-6 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           ),
         },
@@ -260,8 +250,17 @@ const getNavItems = (role: UserRole): NavItem[] => {
 };
 
 const DashboardLayout: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebar_collapsed');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Persistence of sidebar state
+  useEffect(() => {
+    localStorage.setItem('sidebar_collapsed', JSON.stringify(isCollapsed));
+  }, [isCollapsed]);
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout } = useAuth();
@@ -305,13 +304,27 @@ const DashboardLayout: React.FC = () => {
     }
   };
 
-  // Exact match for dashboard, prefix match for others
+  // Exact match for dashboard, prefix match for others, handles query params
   const isActive = (path: string) => {
     const basePath = getBasePath();
+    const [pathWithoutQuery, query] = path.split('?');
+    
+    // For dashboard index, exact match only
     if (path === basePath) {
       return location.pathname === path;
     }
-    return location.pathname.startsWith(path);
+    
+    // If path has query params, match both pathname and search
+    if (query) {
+      return location.pathname === pathWithoutQuery && location.search === `?${query}`;
+    }
+    
+    // For other paths, prefix match but avoid matching when there's a specific query filter active
+    if (location.search && location.pathname === pathWithoutQuery) {
+      return false; // Don't highlight generic path when a filtered path is active
+    }
+    
+    return location.pathname.startsWith(pathWithoutQuery);
   };
 
   return (

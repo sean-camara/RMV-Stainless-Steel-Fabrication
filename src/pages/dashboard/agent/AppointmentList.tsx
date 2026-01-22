@@ -3,20 +3,65 @@ import { format } from 'date-fns';
 import { appointmentApi, userApi } from '../../../api/services';
 import toast from 'react-hot-toast';
 import { Modal } from '../../../components/ui';
+import { 
+  Calendar, 
+  Clock, 
+  Search, 
+  Filter, 
+  User, 
+  Mail, 
+  Briefcase, 
+  CheckCircle2, 
+  XCircle, 
+  AlertCircle, 
+  MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  UserPlus,
+  ArrowRight,
+  Phone,
+  MapPin,
+  FileText
+} from 'lucide-react';
+
+// Helper function to get customer name from nested profile or direct properties
+const getCustomerName = (customer: any) => {
+  const firstName = customer?.profile?.firstName || customer?.firstName || 'Unknown';
+  const lastName = customer?.profile?.lastName || customer?.lastName || '';
+  return { firstName, lastName, fullName: `${firstName} ${lastName}`.trim() };
+};
 
 interface Appointment {
   _id: string;
   customer?: {
     _id: string;
-    firstName: string;
-    lastName: string;
+    firstName?: string;
+    lastName?: string;
     email: string;
     phone?: string;
+    profile?: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+    };
   };
   salesStaff?: {
     _id: string;
-    firstName: string;
-    lastName: string;
+    firstName?: string;
+    lastName?: string;
+    profile?: {
+      firstName?: string;
+      lastName?: string;
+    };
+  };
+  assignedSalesStaff?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    profile?: {
+      firstName?: string;
+      lastName?: string;
+    };
   };
   scheduledDate: string;
   scheduledTime?: string;
@@ -33,6 +78,12 @@ interface Appointment {
     city?: string;
     province?: string;
   };
+  salesAcceptance?: {
+    accepted: boolean;
+    acceptedAt?: string;
+    rescheduleRequested?: boolean;
+    rescheduleReason?: string;
+  };
 }
 
 interface SalesStaff {
@@ -40,6 +91,10 @@ interface SalesStaff {
   firstName: string;
   lastName: string;
   email: string;
+  profile?: {
+    firstName?: string;
+    lastName?: string;
+  };
 }
 
 const CANCEL_TEMPLATES = [
@@ -86,6 +141,7 @@ const AppointmentList: React.FC = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [agentNotes, setAgentNotes] = useState('');
+  const [staffSearchTerm, setStaffSearchTerm] = useState('');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [pendingCancel, setPendingCancel] = useState<Appointment | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState(CANCEL_TEMPLATES[0].id);
@@ -119,12 +175,19 @@ const AppointmentList: React.FC = () => {
 
   const fetchSalesStaff = async () => {
     try {
+      // Only fetch if we don't have data already
+      if (salesStaffList.length > 0) return;
+      
       const response = await userApi.getByRole('sales_staff');
-      const data = response?.data || response;
-      setSalesStaffList(data.users || []);
-    } catch (error) {
+      const staffList = response?.data?.users || response?.users || (Array.isArray(response) ? response : []);
+      console.log('Fetched sales staff:', staffList); // Debug log
+      setSalesStaffList(staffList);
+    } catch (error: any) {
       console.error('Error fetching sales staff:', error);
-      toast.error('Failed to load sales staff');
+      // Don't show error toast if it's a rate limit issue, just log it
+      if (error.response?.status !== 429) {
+        toast.error('Failed to load sales staff');
+      }
     }
   };
 
@@ -204,18 +267,37 @@ const AppointmentList: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, apt?: Appointment) => {
+    // Check if assigned but waiting for sales staff acceptance
+    if (apt && apt.assignedSalesStaff && !apt.salesAcceptance?.accepted && status !== 'cancelled' && status !== 'completed') {
+      if (apt.salesAcceptance?.rescheduleRequested) {
+        return (
+          <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full border ring-1 ring-inset bg-orange-50 text-orange-700 border-orange-200 ring-orange-500/30">
+            <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-orange-500 animate-pulse"></span>
+            Reassignment Requested
+          </span>
+        );
+      }
+      return (
+        <span className="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full border ring-1 ring-inset bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/30">
+          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-amber-500 animate-pulse"></span>
+          Waiting for Sales Approval
+        </span>
+      );
+    }
+    
     const styles: Record<string, string> = {
-      pending: 'bg-amber-50 text-amber-700 border-amber-200',
-      assigned: 'bg-blue-50 text-blue-700 border-blue-200',
-      confirmed: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-      scheduled: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-      completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      cancelled: 'bg-red-50 text-red-700 border-red-200',
-      no_show: 'bg-slate-100 text-slate-600 border-slate-200',
+      pending: 'bg-amber-50 text-amber-700 border-amber-200 ring-amber-500/30',
+      assigned: 'bg-blue-50 text-blue-700 border-blue-200 ring-blue-500/30',
+      confirmed: 'bg-cyan-50 text-cyan-700 border-cyan-200 ring-cyan-500/30',
+      scheduled: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/30',
+      completed: 'bg-emerald-50 text-emerald-700 border-emerald-200 ring-emerald-500/30',
+      cancelled: 'bg-red-50 text-red-700 border-red-200 ring-red-500/30',
+      no_show: 'bg-slate-100 text-slate-600 border-slate-200 ring-slate-500/30',
     };
     return (
-      <span className={`px-2.5 py-1 text-xs font-medium rounded-lg border ${styles[status] || 'bg-slate-50 text-slate-600'}`}>
+      <span className={`inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full border ring-1 ring-inset ${styles[status] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-current opacity-60'}`}></span>
         {status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
       </span>
     );
@@ -224,9 +306,12 @@ const AppointmentList: React.FC = () => {
   const getTypeBadge = (type: string) => {
     const isOffice = type === 'office_consultation';
     return (
-      <span className={`px-2.5 py-1 text-xs font-medium rounded-lg border ${
-        isOffice ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-orange-50 text-orange-700 border-orange-200'
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg border ${
+        isOffice 
+          ? 'bg-purple-50 text-purple-700 border-purple-200' 
+          : 'bg-orange-50 text-orange-700 border-orange-200'
       }`}>
+        <Briefcase className="w-3 h-3" />
         {isOffice ? 'Office' : 'Ocular'}
       </span>
     );
@@ -235,9 +320,10 @@ const AppointmentList: React.FC = () => {
   const filteredAppointments = appointments.filter(apt => {
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
+    const { firstName, lastName } = getCustomerName(apt.customer);
     return (
-      (apt.customer?.firstName || '').toLowerCase().includes(search) ||
-      (apt.customer?.lastName || '').toLowerCase().includes(search) ||
+      firstName.toLowerCase().includes(search) ||
+      lastName.toLowerCase().includes(search) ||
       (apt.customer?.email || '').toLowerCase().includes(search)
     );
   });
@@ -250,20 +336,22 @@ const AppointmentList: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
+    <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 min-h-screen p-4 md:p-6 lg:p-8 space-y-6 relative overflow-hidden">
+      {/* Decorative Orbs */}
+      <div className="absolute top-0 right-0 -z-10 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 -z-10 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">Appointment Management</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Appointment Management</h1>
           <p className="text-slate-500 text-sm mt-1">Review and manage customer appointments</p>
         </div>
         <button
           onClick={() => fetchAppointments()}
-          className="inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition-all"
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-bold shadow-sm hover:shadow-md hover:bg-slate-50 transition-all active:scale-95"
         >
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <ArrowRight className="w-4 h-4 mr-2" />
           Refresh
         </button>
       </div>
@@ -271,232 +359,251 @@ const AppointmentList: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total', value: stats.total, icon: '📅', color: 'bg-slate-50 border-slate-200' },
-          { label: 'Pending', value: stats.pending, icon: '⏳', color: 'bg-amber-50 border-amber-200' },
-          { label: 'Assigned', value: stats.assigned, icon: '👤', color: 'bg-blue-50 border-blue-200' },
-          { label: 'Completed', value: stats.completed, icon: '✅', color: 'bg-emerald-50 border-emerald-200' },
+          { label: 'Total Appointments', value: stats.total, icon: Calendar, color: 'blue' },
+          { label: 'Pending Action', value: stats.pending, icon: AlertCircle, color: 'amber' },
+          { label: 'Assigned', value: stats.assigned, icon: UserPlus, color: 'indigo' },
+          { label: 'Completed', value: stats.completed, icon: CheckCircle2, color: 'emerald' },
         ].map((stat) => (
-          <div key={stat.label} className={`${stat.color} border rounded-2xl p-4`}>
-            <div className="flex items-center justify-between">
-              <span className="text-2xl">{stat.icon}</span>
-              <span className="text-2xl font-bold text-slate-900">{stat.value}</span>
+          <div key={stat.label} className="bg-white/70 backdrop-blur-sm border border-white rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 bg-${stat.color}-50 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                <p className={`text-xs font-bold uppercase tracking-wider text-${stat.color}-600/80`}>{stat.label}</p>
+              </div>
             </div>
-            <p className="text-sm text-slate-600 mt-2">{stat.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+      {/* Filters & Actions */}
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
               placeholder="Search by customer name or email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="rmv-select w-full sm:w-44"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="assigned">Assigned</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="no_show">No Show</option>
-          </select>
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => { setDateFilter(e.target.value); setPage(1); }}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-          />
+          <div className="flex gap-4">
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer hover:bg-slate-50 transition-colors min-w-[160px]"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="assigned">Assigned</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="no_show">No Show</option>
+            </select>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => { setDateFilter(e.target.value); setPage(1); }}
+              className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer hover:bg-slate-50 transition-colors"
+            />
+          </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white overflow-hidden shadow-sm min-h-[400px]">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin"></div>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <p className="text-slate-500 font-medium animate-pulse">Loading appointments...</p>
           </div>
         ) : filteredAppointments.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-5xl mb-4">📅</div>
-            <h3 className="text-lg font-semibold text-slate-900">No appointments found</h3>
-            <p className="text-slate-500 text-sm mt-1">Try adjusting your filters</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100">
+              <Calendar className="w-10 h-10 text-slate-300" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900">No appointments found</h3>
+            <p className="text-slate-500 mt-1 max-w-sm">
+              We couldn't find any appointments matching your filters. Try adjusting your search criteria.
+            </p>
+            <button
+              onClick={() => { setSearchTerm(''); setStatusFilter(''); setDateFilter(''); }}
+              className="mt-6 px-6 py-2 bg-indigo-50 text-indigo-700 text-sm font-bold rounded-xl hover:bg-indigo-100 transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         ) : (
           <>
-            {/* Desktop Table */}
             <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-100">
-                  <tr>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Customer</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Schedule</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-                    <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Assigned To</th>
-                    <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/50">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Schedule</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Assigned To</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredAppointments.map((apt) => (
-                    <tr key={apt._id} className="hover:bg-slate-50 transition-colors">
+                  {filteredAppointments.map((apt) => {
+                    const customer = getCustomerName(apt.customer);
+                    return (
+                    <tr key={apt._id} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-medium">
-                            {apt.customer?.firstName?.[0] || 'C'}{apt.customer?.lastName?.[0] || ''}
+                          <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-100">
+                            {customer.firstName?.[0] || 'C'}{customer.lastName?.[0] || ''}
                           </div>
                           <div>
-                            <p className="font-medium text-slate-900">{apt.customer?.firstName || 'Customer'} {apt.customer?.lastName || ''}</p>
-                            <p className="text-sm text-slate-500">{apt.customer?.email || ''}</p>
+                            <p className="font-bold text-slate-900">{customer.fullName}</p>
+                            <p className="text-xs text-slate-500 font-medium">{apt.customer?.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-medium text-slate-900">{format(new Date(apt.scheduledDate), 'MMM d, yyyy')}</p>
-                        <p className="text-sm text-slate-500">{apt.scheduledTime || 'TBD'}</p>
+                        <div className="flex items-center gap-2">
+                           <Calendar className="w-4 h-4 text-slate-400" />
+                           <span className="font-medium text-slate-700">{format(new Date(apt.scheduledDate), 'MMM d, yyyy')}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                           <Clock className="w-4 h-4 text-slate-400" />
+                           <span className="text-xs font-medium text-slate-500">{apt.scheduledTime || 'TBD'}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">{getTypeBadge(apt.appointmentType)}</td>
-                      <td className="px-6 py-4">{getStatusBadge(apt.status)}</td>
+                      <td className="px-6 py-4">{getStatusBadge(apt.status, apt)}</td>
                       <td className="px-6 py-4">
-                        {apt.salesStaff ? (
-                          <span className="text-slate-900 font-medium">{apt.salesStaff.firstName} {apt.salesStaff.lastName}</span>
+                        {(apt.assignedSalesStaff || apt.salesStaff) ? (
+                          <div className="flex items-center gap-2">
+                             <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                {(() => {
+                                  const staff = apt.assignedSalesStaff || apt.salesStaff;
+                                  const firstName = staff?.firstName || staff?.profile?.firstName;
+                                  return firstName?.[0]?.toUpperCase() || 'S';
+                                })()}
+                             </div>
+                             <span className="text-slate-700 font-medium text-sm">
+                               {(() => {
+                                 const staff = apt.assignedSalesStaff || apt.salesStaff;
+                                 const firstName = staff?.firstName || staff?.profile?.firstName || '';
+                                 const lastName = staff?.lastName || staff?.profile?.lastName || '';
+                                 return `${firstName} ${lastName}`.trim() || 'Sales Staff';
+                               })()}
+                             </span>
+                          </div>
                         ) : (
-                          <span className="text-slate-400 text-sm">Not assigned</span>
+                          <span className="text-slate-400 text-sm italic flex items-center gap-1">
+                             <AlertCircle className="w-3 h-3" />
+                             Unassigned
+                          </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => { setSelectedAppointment(apt); setShowDetailsModal(true); }}
-                            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
                             title="View Details"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
+                            <MoreHorizontal className="w-4 h-4" />
                           </button>
-                          {apt.status === 'pending' && (
+                          {apt.status === 'pending' && !apt.assignedSalesStaff && (
                             <button
                               onClick={() => { setSelectedAppointment(apt); setShowAssignModal(true); }}
-                              className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Assign"
+                              className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                              title="Assign Agent"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                              </svg>
+                              <UserPlus className="w-4 h-4" />
                             </button>
                           )}
                           {['pending', 'assigned', 'confirmed', 'scheduled'].includes(apt.status) && (
                             <button
                               onClick={() => openCancelModal(apt)}
-                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
                               title="Cancel"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
+                              <XCircle className="w-4 h-4" />
                             </button>
                           )}
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile Cards */}
             <div className="lg:hidden divide-y divide-slate-100">
-              {filteredAppointments.map((apt) => (
-                <div key={apt._id} className="p-4">
+              {filteredAppointments.map((apt) => {
+                const customer = getCustomerName(apt.customer);
+                return (
+                <div key={apt._id} className="p-4 bg-white/50 hover:bg-white transition-colors">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-medium text-sm">
-                        {apt.customer?.firstName?.[0] || 'C'}{apt.customer?.lastName?.[0] || ''}
+                      <div className="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm border border-indigo-100">
+                        {customer.firstName?.[0] || 'C'}{customer.lastName?.[0] || ''}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-900">{apt.customer?.firstName || 'Customer'} {apt.customer?.lastName || ''}</p>
-                        <p className="text-sm text-slate-500">{format(new Date(apt.scheduledDate), 'MMM d')} • {apt.scheduledTime || 'TBD'}</p>
+                        <p className="font-bold text-slate-900">{customer.fullName}</p>
+                        <p className="text-xs font-medium text-slate-500">{format(new Date(apt.scheduledDate), 'MMM d')} • {apt.scheduledTime || 'TBD'}</p>
                       </div>
                     </div>
-                    {getStatusBadge(apt.status)}
+                    {getStatusBadge(apt.status, apt)}
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pl-[52px]">
                     <div className="flex gap-2">
                       {getTypeBadge(apt.appointmentType)}
-                      {apt.salesStaff && (
-                        <span className="text-xs text-slate-500">→ {apt.salesStaff.firstName}</span>
+                      {(apt.assignedSalesStaff || apt.salesStaff) && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg border border-slate-100">
+                          <span className={`w-1.5 h-1.5 rounded-full ${apt.salesAcceptance?.accepted ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                          <span className="text-xs font-medium text-slate-600">{(apt.assignedSalesStaff || apt.salesStaff)?.firstName}</span>
+                        </div>
                       )}
                     </div>
                     <div className="flex gap-1">
                       <button
                         onClick={() => { setSelectedAppointment(apt); setShowDetailsModal(true); }}
-                        className="p-2 text-slate-400 hover:text-slate-600 rounded-lg"
+                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                        <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      {apt.status === 'pending' && (
-                        <button
-                          onClick={() => { setSelectedAppointment(apt); setShowAssignModal(true); }}
-                          className="p-2 text-blue-500 hover:text-blue-700 rounded-lg"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                          </svg>
-                        </button>
-                      )}
-                      {['pending', 'assigned', 'confirmed', 'scheduled'].includes(apt.status) && (
-                        <button
-                          onClick={() => openCancelModal(apt)}
-                          className="p-2 text-red-400 hover:text-red-600 rounded-lg"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           </>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100">
-            <p className="text-sm text-slate-600">Page {page} of {totalPages}</p>
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            <p className="text-sm font-medium text-slate-500">Page {page} of {totalPages}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -504,88 +611,211 @@ const AppointmentList: React.FC = () => {
       </div>
 
       {/* Details Modal */}
-      {showDetailsModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Appointment Details</h3>
-              <button onClick={() => setShowDetailsModal(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+      <Modal
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        title="Appointment Details"
+        size="md"
+      >
+        {selectedAppointment && (() => {
+          const customer = getCustomerName(selectedAppointment.customer);
+          return (
+          <div className="space-y-6">
+            {/* Header Section */}
+            <div className="flex items-center gap-5 p-5 rounded-2xl bg-slate-50 border border-slate-100">
+               <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center border border-slate-100 shadow-sm relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-colors" />
+                  <User className="w-10 h-10 text-indigo-200 group-hover:text-indigo-300 transition-colors" />
+               </div>
+               <div className="flex-1 min-w-0">
+                  <h3 className="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic underline decoration-indigo-500/30 decoration-4 underline-offset-4 mb-3">
+                    {customer.fullName}
+                  </h3>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5 mt-3">
+                     <div className="flex items-center gap-1.5 px-2 bg-white/50 backdrop-blur-sm rounded-lg border border-slate-100">
+                        <Mail className="w-3 h-3 text-indigo-500" />
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none py-1">
+                            {selectedAppointment.customer?.email}
+                        </span>
+                     </div>
+                     {selectedAppointment.customer?.phone && (
+                        <div className="flex items-center gap-1.5 px-2 bg-white/50 backdrop-blur-sm rounded-lg border border-slate-100">
+                           <Phone className="w-3 h-3 text-indigo-500" />
+                           <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest leading-none py-1">
+                               {selectedAppointment.customer?.phone}
+                           </span>
+                        </div>
+                     )}
+                  </div>
+               </div>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-medium">
-                  {selectedAppointment.customer?.firstName?.[0] || 'C'}{selectedAppointment.customer?.lastName?.[0] || ''}
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">{selectedAppointment.customer?.firstName} {selectedAppointment.customer?.lastName}</p>
-                  <p className="text-sm text-slate-500">{selectedAppointment.customer?.email}</p>
-                  {selectedAppointment.customer?.phone && (
-                    <p className="text-sm text-slate-500">{selectedAppointment.customer?.phone}</p>
+
+            <div className="grid grid-cols-2 gap-4">
+               {/* Left column */}
+               <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
+                     <div className="flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Scheduled For</p>
+                     </div>
+                     <div className="space-y-1.5">
+                        <p className="text-sm font-black text-slate-900 uppercase">
+                          {format(new Date(selectedAppointment.scheduledDate), 'MMM dd, yyyy')}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-500 flex items-center gap-1.5">
+                          <Clock className="w-3 h-3" />
+                          {selectedAppointment.scheduledTime || 'TBD'}
+                        </p>
+                     </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2.5">
+                     <div className="flex items-center gap-2">
+                        <Briefcase className="w-3.5 h-3.5 text-indigo-500" />
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Appointment Type</p>
+                     </div>
+                     <div className="scale-90 origin-left">{getTypeBadge(selectedAppointment.appointmentType)}</div>
+                  </div>
+               </div>
+
+               {/* Right column */}
+               <div className="space-y-4">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2.5">
+                     <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</p>
+                     </div>
+                     <div className="scale-90 origin-left">{getStatusBadge(selectedAppointment.status, selectedAppointment)}</div>
+                  </div>
+
+                  {selectedAppointment.interestedCategory && (
+                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
+                        <div className="flex items-center gap-2">
+                           <FileText className="w-3.5 h-3.5 text-indigo-500" />
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Interest</p>
+                        </div>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-tight">{selectedAppointment.interestedCategory}</p>
+                     </div>
                   )}
-                </div>
-              </div>
+               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-slate-500">Date</p>
-                  <p className="font-medium text-slate-900">{format(new Date(selectedAppointment.scheduledDate), 'MMMM d, yyyy')}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Time</p>
-                  <p className="font-medium text-slate-900">{selectedAppointment.scheduledTime || 'TBD'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Type</p>
-                  <div className="mt-1">{getTypeBadge(selectedAppointment.appointmentType)}</div>
-                </div>
-                <div>
-                  <p className="text-sm text-slate-500">Status</p>
-                  <div className="mt-1">{getStatusBadge(selectedAppointment.status)}</div>
-                </div>
-              </div>
+            {selectedAppointment.description && (
+               <div className="p-5 bg-white rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Service Description</p>
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed italic">"{selectedAppointment.description}"</p>
+               </div>
+            )}
 
-              {selectedAppointment.interestedCategory && (
-                <div>
-                  <p className="text-sm text-slate-500">Interested In</p>
-                  <p className="font-medium text-slate-900">{selectedAppointment.interestedCategory}</p>
-                </div>
-              )}
-
-              {selectedAppointment.description && (
-                <div>
-                  <p className="text-sm text-slate-500">Description</p>
-                  <p className="text-slate-900">{selectedAppointment.description}</p>
-                </div>
-              )}
-
-              {selectedAppointment.siteAddress && (
-                <div>
-                  <p className="text-sm text-slate-500">Site Address</p>
-                  <p className="text-slate-900">
+            {selectedAppointment.siteAddress && (
+               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-center gap-2 mb-3">
+                     <MapPin className="w-3.5 h-3.5 text-indigo-500" />
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Project Location</p>
+                  </div>
+                  <p className="text-xs font-bold text-slate-700 ml-5">
                     {[selectedAppointment.siteAddress.street, selectedAppointment.siteAddress.city, selectedAppointment.siteAddress.province].filter(Boolean).join(', ')}
                   </p>
-                </div>
-              )}
+               </div>
+            )}
 
-              {selectedAppointment.salesStaff && (
-                <div>
-                  <p className="text-sm text-slate-500">Assigned Sales Staff</p>
-                  <p className="font-medium text-slate-900">{selectedAppointment.salesStaff.firstName} {selectedAppointment.salesStaff.lastName}</p>
+            {/* Assignment Section */}
+            <div className="pt-4 border-t border-slate-100">
+              {(selectedAppointment.assignedSalesStaff || selectedAppointment.salesStaff) ? (() => {
+                const staff = selectedAppointment.assignedSalesStaff || selectedAppointment.salesStaff;
+                const staffFirstName = staff?.profile?.firstName || staff?.firstName || 'Unknown';
+                const staffLastName = staff?.profile?.lastName || staff?.lastName || '';
+                return (
+                <div className="group transition-all">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Assigned Sales Staff</p>
+                  <div className={`flex items-center gap-4 p-4 rounded-2xl border shadow-sm transition-colors ${
+                    selectedAppointment.salesAcceptance?.accepted 
+                      ? 'bg-emerald-50 border-emerald-100/50 hover:border-emerald-200' 
+                      : selectedAppointment.salesAcceptance?.rescheduleRequested
+                        ? 'bg-orange-50 border-orange-100/50 hover:border-orange-200'
+                        : 'bg-amber-50 border-amber-100/50 hover:border-amber-200'
+                  }`}>
+                     <div className={`w-12 h-12 bg-white rounded-xl flex items-center justify-center font-black text-lg border shadow-sm ${
+                       selectedAppointment.salesAcceptance?.accepted 
+                         ? 'text-emerald-600 border-emerald-100' 
+                         : selectedAppointment.salesAcceptance?.rescheduleRequested
+                           ? 'text-orange-600 border-orange-100'
+                           : 'text-amber-600 border-amber-100'
+                     }`}>
+                        {staffFirstName?.[0] || 'S'}
+                     </div>
+                     <div className="flex-1">
+                        <p className={`text-sm font-black uppercase tracking-tight group-hover:translate-x-1 transition-transform ${
+                          selectedAppointment.salesAcceptance?.accepted 
+                            ? 'text-emerald-900' 
+                            : selectedAppointment.salesAcceptance?.rescheduleRequested
+                              ? 'text-orange-900'
+                              : 'text-amber-900'
+                        }`}>
+                          {staffFirstName} {staffLastName}
+                        </p>
+                        <p className={`text-[9px] font-black uppercase tracking-[0.2em] mt-0.5 ${
+                          selectedAppointment.salesAcceptance?.accepted 
+                            ? 'text-emerald-500' 
+                            : selectedAppointment.salesAcceptance?.rescheduleRequested
+                              ? 'text-orange-500'
+                              : 'text-amber-500'
+                        }`}>
+                          {selectedAppointment.salesAcceptance?.accepted 
+                            ? 'Accepted • Sales Representative' 
+                            : selectedAppointment.salesAcceptance?.rescheduleRequested
+                              ? 'Reassignment Requested'
+                              : 'Waiting for Acceptance'}
+                        </p>
+                        {selectedAppointment.salesAcceptance?.rescheduleRequested && selectedAppointment.salesAcceptance?.rescheduleReason && (
+                          <p className="text-xs text-orange-700 mt-2 italic">
+                            Reason: "{selectedAppointment.salesAcceptance.rescheduleReason}"
+                          </p>
+                        )}
+                     </div>
+                     <div className={`px-3 py-1 bg-white rounded-full border ${
+                       selectedAppointment.salesAcceptance?.accepted 
+                         ? 'border-emerald-100' 
+                         : selectedAppointment.salesAcceptance?.rescheduleRequested
+                           ? 'border-orange-100'
+                           : 'border-amber-100'
+                     }`}>
+                        <span className={`text-[8px] font-black uppercase ${
+                          selectedAppointment.salesAcceptance?.accepted 
+                            ? 'text-emerald-600' 
+                            : selectedAppointment.salesAcceptance?.rescheduleRequested
+                              ? 'text-orange-600'
+                              : 'text-amber-600'
+                        }`}>
+                          {selectedAppointment.salesAcceptance?.accepted 
+                            ? 'Active' 
+                            : selectedAppointment.salesAcceptance?.rescheduleRequested
+                              ? 'Needs Reassign'
+                              : 'Pending'}
+                        </span>
+                     </div>
+                  </div>
+                </div>
+                );
+              })() : (
+                <div className="p-6 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-3 bg-slate-50/50 group hover:border-indigo-200 hover:bg-slate-50 transition-all">
+                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-slate-100 group-hover:scale-110 transition-transform">
+                      <AlertCircle className="w-5 h-5 text-slate-300 group-hover:text-indigo-400" />
+                   </div>
+                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No assigned sales personnel</span>
                 </div>
               )}
             </div>
-            <div className="p-5 border-t border-slate-100 flex gap-3 justify-end">
-              <button onClick={() => setShowDetailsModal(false)} className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-xl">
+
+            <div className="pt-6 border-t border-slate-100 flex gap-3 justify-end">
+              <button onClick={() => setShowDetailsModal(false)} className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors">
                 Close
               </button>
               {selectedAppointment.status === 'pending' && (
                 <button
                   onClick={() => { setShowDetailsModal(false); setShowAssignModal(true); }}
-                  className="px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800"
+                  className="px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-slate-800 shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5"
                 >
                   Assign Staff
                 </button>
@@ -594,13 +824,13 @@ const AppointmentList: React.FC = () => {
                 <>
                   <button
                     onClick={() => { handleComplete(selectedAppointment._id); setShowDetailsModal(false); }}
-                    className="px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700"
+                    className="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
                   >
-                    Mark Completed
+                    Complete
                   </button>
                   <button
                     onClick={() => { handleNoShow(selectedAppointment._id); setShowDetailsModal(false); }}
-                    className="px-4 py-2.5 bg-slate-600 text-white text-sm font-medium rounded-xl hover:bg-slate-700"
+                    className="px-5 py-2.5 bg-slate-600 text-white text-sm font-bold rounded-xl hover:bg-slate-700 shadow-lg shadow-slate-600/20 transition-all hover:-translate-y-0.5"
                   >
                     No Show
                   </button>
@@ -608,147 +838,214 @@ const AppointmentList: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-      )}
+          );
+        })()}
+      </Modal>
 
       {/* Assign Modal */}
-      {showAssignModal && selectedAppointment && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Assign Sales Staff</h3>
-              <button onClick={() => { setShowAssignModal(false); setSelectedStaffId(''); setAgentNotes(''); }} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div>
-                <p className="text-sm text-slate-500 mb-2">Appointment for</p>
-                <p className="font-medium text-slate-900">{selectedAppointment.customer?.firstName} {selectedAppointment.customer?.lastName}</p>
-                <p className="text-sm text-slate-500">{format(new Date(selectedAppointment.scheduledDate), 'MMM d, yyyy')} • {selectedAppointment.scheduledTime || 'TBD'}</p>
-              </div>
+      <Modal
+        isOpen={showAssignModal}
+        onClose={() => { setShowAssignModal(false); setSelectedStaffId(''); setAgentNotes(''); setStaffSearchTerm(''); }}
+        title="Assign Sales Staff"
+        size="md"
+      >
+         {selectedAppointment && (() => {
+            const customer = getCustomerName(selectedAppointment.customer);
+            return (
+            <div className="space-y-6">
+               <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Customer</p>
+                  <p className="font-bold text-slate-900 text-lg">{customer.fullName}</p>
+                  <p className="text-sm text-slate-500 mt-1">{format(new Date(selectedAppointment.scheduledDate), 'MMMM d, yyyy')} • {selectedAppointment.scheduledTime || 'TBD'}</p>
+               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Select Sales Staff *</label>
-                <select
-                  value={selectedStaffId}
-                  onChange={(e) => setSelectedStaffId(e.target.value)}
-                  className="rmv-select"
-                >
-                  <option value="">Choose a sales staff member</option>
-                  {salesStaffList.map((staff) => (
-                    <option key={staff._id} value={staff._id}>
-                      {staff.firstName} {staff.lastName} - {staff.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
+               <div className="space-y-4">
+                  <div>
+                     <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-black uppercase tracking-widest text-slate-400">Select Sales Staff</label>
+                        {selectedStaffId && (
+                           <button 
+                              onClick={() => setSelectedStaffId('')}
+                              className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                           >
+                              Clear selection
+                           </button>
+                        )}
+                     </div>
+                     
+                     {/* Custom Staff Selector */}
+                     <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input 
+                           type="text"
+                           placeholder="Search staff members..."
+                           value={staffSearchTerm}
+                           onChange={(e) => setStaffSearchTerm(e.target.value)}
+                           className="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        />
+                     </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Agent Notes (Optional)</label>
-                <textarea
-                  value={agentNotes}
-                  onChange={(e) => setAgentNotes(e.target.value)}
-                  placeholder="Add any notes for the sales staff..."
-                  rows={3}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 resize-none"
-                />
-              </div>
-            </div>
-            <div className="p-5 border-t border-slate-100 flex gap-3 justify-end">
-              <button
-                onClick={() => { setShowAssignModal(false); setSelectedStaffId(''); setAgentNotes(''); }}
-                className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAssign}
-                disabled={processing || !selectedStaffId}
-                className="px-4 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 disabled:opacity-50"
-              >
-                {processing ? 'Assigning...' : 'Assign'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                     <div className="grid grid-cols-1 gap-2 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
+                        {salesStaffList
+                          .filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(staffSearchTerm.toLowerCase()))
+                          .map((staff) => (
+                           <button
+                              key={staff._id}
+                              type="button"
+                              onClick={() => setSelectedStaffId(staff._id)}
+                              className={`flex items-center gap-4 p-3 rounded-xl border transition-all text-left group ${
+                                 selectedStaffId === staff._id
+                                 ? 'border-indigo-600 bg-indigo-50 shadow-sm ring-1 ring-indigo-600'
+                                 : 'border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50'
+                              }`}
+                           >
+                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                                 selectedStaffId === staff._id 
+                                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
+                                   : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200'
+                              }`}>
+                                 {(() => {
+                                   const firstName = staff?.firstName || staff?.profile?.firstName;
+                                   return firstName?.[0]?.toUpperCase() || 'S';
+                                 })()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                 <p className={`font-bold text-sm transition-colors ${selectedStaffId === staff._id ? 'text-indigo-900' : 'text-slate-900 uppercase tracking-tight'}`}>
+                                    {staff.firstName} {staff.lastName}
+                                 </p>
+                                 <p className="text-[10px] font-bold text-slate-400 tracking-widest mt-0.5">SALES REPRESENTATIVE</p>
+                              </div>
+                              {selectedStaffId === staff._id ? (
+                                 <div className="bg-indigo-600 rounded-full p-1 animate-in zoom-in duration-300">
+                                    <CheckCircle2 className="w-4 h-4 text-white" />
+                                 </div>
+                              ) : (
+                                 <div className="w-5 h-5 rounded-full border-2 border-slate-100 group-hover:border-slate-200 transition-colors" />
+                              )}
+                           </button>
+                        ))}
+                        {salesStaffList.filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(staffSearchTerm.toLowerCase())).length === 0 && (
+                           <div className="text-center py-8">
+                              <p className="text-sm text-slate-400 font-medium">No staff members found</p>
+                           </div>
+                        )}
+                     </div>
+                  </div>
 
+                  <div>
+                     <label className="block text-sm font-bold text-slate-700 mb-2">Note for Agent <span className="text-slate-400 font-normal">(Optional)</span></label>
+                     <textarea
+                        value={agentNotes}
+                        onChange={(e) => setAgentNotes(e.target.value)}
+                        placeholder="Add any specific instructions or context..."
+                        rows={3}
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
+                     />
+                  </div>
+               </div>
+
+               <div className="pt-4 border-t border-slate-100 flex gap-3 justify-end">
+                  <button
+                     onClick={() => { setShowAssignModal(false); setSelectedStaffId(''); setAgentNotes(''); }}
+                     className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
+                  >
+                     Cancel
+                  </button>
+                  <button
+                     onClick={handleAssign}
+                     disabled={processing || !selectedStaffId}
+                     className="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0"
+                  >
+                     {processing ? 'Assigning...' : 'Confirm Assignment'}
+                  </button>
+               </div>
+            </div>
+            );
+         })()}
+      </Modal>
+
+      {/* Cancel Modal */}
       <Modal
         isOpen={showCancelModal}
         onClose={() => { setShowCancelModal(false); setPendingCancel(null); }}
         title="Cancel Appointment"
         size="lg"
-        variant="light"
       >
-        <div className="space-y-5">
-          {pendingCancel && (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-              <p className="text-sm font-medium text-slate-700">Cancelling for</p>
-              <p className="text-lg font-semibold text-slate-900">{pendingCancel.customer?.firstName} {pendingCancel.customer?.lastName}</p>
-              <p className="text-sm text-slate-600">{format(new Date(pendingCancel.scheduledDate), 'MMM d, yyyy')} • {pendingCancel.scheduledTime || 'TBD'} ({pendingCancel.appointmentType === 'ocular_visit' ? 'Ocular' : 'Office'})</p>
-            </div>
-          )}
+        <div className="space-y-6">
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3">
+             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+             <div>
+                <h4 className="font-bold text-red-900">Cancellation Warning</h4>
+                <p className="text-sm text-red-700 mt-1">This action will cancel the appointment and notify the customer via email. This cannot be undone.</p>
+             </div>
+          </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-slate-800">Pick a message to send</p>
-            <div className="space-y-2">
+          <div className="space-y-4">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Select Cancellation Reason</p>
+            <div className="grid grid-cols-1 gap-3">
               {CANCEL_TEMPLATES.map((template) => (
-                <label
+                <button
                   key={template.id}
-                  className={`flex items-start gap-3 p-3 border rounded-xl cursor-pointer transition-colors ${
+                  type="button"
+                  onClick={() => {
+                    setSelectedTemplate(template.id);
+                    setCancelReason(template.title);
+                    setCancelMessage(template.id === 'custom' ? '' : template.message);
+                  }}
+                  className={`flex items-start gap-4 p-4 rounded-2xl border transition-all text-left group ${
                     selectedTemplate === template.id
-                      ? 'border-slate-900 bg-slate-50'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-red-600 bg-red-50/30 ring-1 ring-red-600 shadow-sm'
+                      : 'border-slate-100 bg-white hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
-                  <input
-                    type="radio"
-                    className="mt-1"
-                    checked={selectedTemplate === template.id}
-                    onChange={() => {
-                      setSelectedTemplate(template.id);
-                      setCancelReason(template.title);
-                      setCancelMessage(template.id === 'custom' ? '' : template.message);
-                    }}
-                  />
-                  <div>
-                    <p className="font-semibold text-slate-900">{template.title}</p>
-                    <p className="text-sm text-slate-600">{template.message || 'Write a custom message below.'}</p>
+                  <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                    selectedTemplate === template.id
+                      ? 'border-red-600 bg-red-600'
+                      : 'border-slate-200 group-hover:border-slate-300'
+                  }`}>
+                    {selectedTemplate === template.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
-                </label>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-black transition-colors uppercase tracking-tight ${selectedTemplate === template.id ? 'text-red-900' : 'text-slate-900'}`}>
+                      {template.title}
+                    </p>
+                    {template.message && <p className="text-[11px] font-medium text-slate-500 mt-1 italic line-clamp-2">"{template.message}"</p>}
+                  </div>
+                  {selectedTemplate === template.id && (
+                     <div className="bg-red-100 rounded-lg px-2 py-0.5 self-center">
+                        <span className="text-[8px] font-black text-red-600 uppercase tracking-widest">Selected</span>
+                     </div>
+                  )}
+                </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-800 mb-2">Message to customer</label>
+            <label className="block text-sm font-bold text-slate-900 mb-2">Message to customer</label>
             <textarea
               value={cancelMessage}
               onChange={(e) => setCancelMessage(e.target.value)}
-              placeholder="Tell the customer why you’re cancelling and how to rebook..."
+              placeholder="Tell the customer why you’re cancelling..."
               rows={4}
-              className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 resize-none"
+              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 resize-none transition-all"
             />
-            <p className="text-xs text-slate-500 mt-1">This message is emailed to the customer along with the cancellation notice.</p>
           </div>
 
-          <div className="flex justify-end gap-3">
+          <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
             <button
               onClick={() => { setShowCancelModal(false); setPendingCancel(null); }}
-              className="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-xl"
+              className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-800 transition-colors"
               disabled={processing}
             >
-              Keep appointment
+              Keep Appointment
             </button>
             <button
               onClick={handleCancel}
               disabled={processing}
-              className="px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 disabled:opacity-50"
+              className="px-5 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:translate-y-0"
             >
-              {processing ? 'Cancelling...' : 'Cancel appointment'}
+              {processing ? 'Cancelling...' : 'Confirm Cancellation'}
             </button>
           </div>
         </div>
@@ -758,3 +1055,4 @@ const AppointmentList: React.FC = () => {
 };
 
 export default AppointmentList;
+

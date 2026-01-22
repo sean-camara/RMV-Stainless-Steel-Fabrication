@@ -477,6 +477,9 @@ const BookAppointment: React.FC = () => {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div>
             <h2 className="text-xl font-bold text-slate-900 mb-6">Choose Service Type</h2>
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+              Before booking, please note we collect a ₱1,000 design fee once the engineer starts your blueprint and costing. This covers layout planning, CAD work, and cost estimation, and it will be deducted from your total project cost if you continue. If you cancel, the fee is non-refundable because the design work has already been completed. Ocular site visits may also include a travel/ocular fee depending on your location.
+            </div>
             <div className="grid md:grid-cols-2 gap-4">
               {/* Office Consultation Option */}
               <button

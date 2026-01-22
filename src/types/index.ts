@@ -328,7 +328,7 @@ export interface Payment {
   projectId?: Project; // Alias for backward compatibility
   customer: User;
   customerId?: User; // Alias for backward compatibility
-  stage: 'initial' | 'midpoint' | 'final';
+  stage: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final';
   amount: {
     expected: number;
     received?: number;
@@ -339,6 +339,10 @@ export interface Payment {
   notes?: string;
   referenceNumber?: string; // Transaction reference
   qrCode?: FileUpload & { uploadedBy: User };
+  qrCodes?: {
+    gcash?: string | FileUpload;
+    bank?: string | FileUpload;
+  };
   status: PaymentStatus;
   verification?: {
     verifiedBy: User;

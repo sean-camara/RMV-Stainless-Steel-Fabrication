@@ -22,10 +22,10 @@ import {
   SettingsSecurity, 
   SettingsNotifications 
 } from './pages/dashboard/customer/settings';
-import { AgentDashboard, AppointmentList } from './pages/dashboard/agent';
-import { SalesDashboard, SalesAppointments, ProjectList as SalesProjectList, TravelFees as SalesTravelFees } from './pages/dashboard/sales';
-import { EngineerDashboard, BlueprintManagement } from './pages/dashboard/engineer';
-import { CashierDashboard, PaymentVerification, TravelFees as CashierTravelFees } from './pages/dashboard/cashier';
+import { AgentDashboard, AppointmentList, CalendarView, SalesStaffList } from './pages/dashboard/agent';
+import { SalesDashboard, SalesAppointments, SalesRecording } from './pages/dashboard/sales';
+import { EngineerDashboard, BlueprintManagement, EngineerProjects, EngineerProjectDetail } from './pages/dashboard/engineer';
+import { CashierDashboard, PendingPayments, PaymentHistory, QRManagement, TravelFees as CashierTravelFees } from './pages/dashboard/cashier';
 import { FabricationDashboard, FabricationQueue } from './pages/dashboard/fabrication';
 import { AdminDashboard, UserManagement, ActivityLogs, AdminAppointments, AdminProjects, AdminPayments, AdminReports } from './pages/dashboard/admin';
 import { Profile } from './pages/dashboard/shared';
@@ -131,7 +131,8 @@ const App: React.FC = () => {
             <Route index element={<AgentDashboard />} />
             <Route path="appointments" element={<AppointmentList />} />
             <Route path="appointments/:id" element={<AppointmentList />} />
-            <Route path="calendar" element={<AppointmentList />} />
+            <Route path="calendar" element={<CalendarView />} />
+            <Route path="staff" element={<SalesStaffList />} />
           </Route>
 
           {/* Sales Dashboard */}
@@ -146,9 +147,7 @@ const App: React.FC = () => {
             <Route index element={<SalesDashboard />} />
             <Route path="appointments" element={<SalesAppointments />} />
             <Route path="appointments/:id" element={<SalesAppointments />} />
-            <Route path="projects" element={<SalesProjectList />} />
-            <Route path="projects/:id" element={<SalesProjectList />} />
-            <Route path="travel-fees" element={<SalesTravelFees />} />
+            <Route path="recording/:id" element={<SalesRecording />} />
           </Route>
 
           {/* Engineer Dashboard */}
@@ -161,9 +160,10 @@ const App: React.FC = () => {
             }
           >
             <Route index element={<EngineerDashboard />} />
-            <Route path="pending" element={<BlueprintManagement />} />
-            <Route path="projects" element={<BlueprintManagement />} />
-            <Route path="projects/:id" element={<BlueprintManagement />} />
+            <Route path="pending" element={<EngineerProjects />} />
+            <Route path="projects" element={<EngineerProjects />} />
+            <Route path="project/:id" element={<EngineerProjectDetail />} />
+            <Route path="blueprints" element={<BlueprintManagement />} />
           </Route>
 
           {/* Cashier Dashboard */}
@@ -176,9 +176,9 @@ const App: React.FC = () => {
             }
           >
             <Route index element={<CashierDashboard />} />
-            <Route path="pending" element={<PaymentVerification />} />
-            <Route path="payments" element={<PaymentVerification />} />
-            <Route path="payments/:id" element={<PaymentVerification />} />
+            <Route path="pending" element={<PendingPayments />} />
+            <Route path="payments" element={<PaymentHistory />} />
+            <Route path="qr-setup" element={<QRManagement />} />
             <Route path="travel-fees" element={<CashierTravelFees />} />
           </Route>
 

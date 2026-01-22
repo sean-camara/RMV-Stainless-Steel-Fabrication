@@ -381,7 +381,78 @@ This project is proprietary software for RMV Stainless Steel Fabrication.
 - **New utility functions**: Image URL helper, etc.
 - **Type definitions**: Extended TypeScript types for new features
 - **Leaflet integration**: Added `leaflet` and `react-leaflet` packages
+---
 
+### January 22, 2026 (Latest Updates)
+
+#### 💰 Cashier Dashboard Refactor (MAJOR)
+- **Split into 3 Modules**: Refactored monolithic `PaymentVerification.tsx` into separate, focused components:
+  - **PendingPayments.tsx**: Active payment verification queue with real-time status tracking
+  - **PaymentHistory.tsx**: Complete transaction log with advanced filtering (status, search, pagination)
+  - **QRManagement.tsx**: QR code upload module for GCash and Bank Transfer QR codes
+- **UI Redesign**: Complete visual overhaul to match Customer Dashboard aesthetic
+  - Removed gradient backgrounds and excessive colors
+  - Applied clean white/slate minimalist theme (`bg-white`, `border-slate-100`, `rounded-2xl`)
+  - Professional typography with `font-black`, `tracking-tight` for headers
+  - Subtle status badges instead of colorful cards
+- **Routing Updates**: Updated `App.tsx` with new cashier routes:
+  - `/dashboard/cashier/payments` → Pending Payments (default)
+  - `/dashboard/cashier/history` → Payment History
+  - `/dashboard/cashier/qr` → QR Management
+
+#### 🎨 Custom Select Component
+- **Replaced Native Select**: Built custom dropdown from scratch to fix styling issues
+  - Full theme support (`light`/`dark` variants)
+  - Checkmark indicators for selected items
+  - Click-outside-to-close functionality
+  - Keyboard navigation ready
+  - Smooth animations (`animate-in fade-in zoom-in-95`)
+  - Fixed z-index stacking issues with high `z-[9999]` priority
+- **Added Icons**: Integrated `lucide-react` icons (`ChevronDown`, `Check`)
+- **Component Location**: `src/components/ui/Input.tsx` (Select component)
+
+#### 🔧 Component Fixes
+- **Card Component**: Extended to accept all HTML div attributes (e.g., `style`, `data-*`)
+- **Table Component**: 
+  - Extended `TableCell` to accept `colSpan` and other standard table attributes
+  - Fixed `TableEmpty` to require `colSpan` parameter
+  - Added `variant="light"` support for clean white tables
+- **Input Components**: Added `variant="light"` to all form inputs for consistency
+
+#### 📡 API & Type Updates
+- **New Payment API**: 
+  - Added `uploadQR` method to `paymentApi` (supports dual QR upload)
+  - Endpoint: `POST /payments/:id/qrcode` with FormData
+- **Extended Payment Type**: 
+  - Added `qrCodes?: { gcash?: string | FileUpload; bank?: string | FileUpload; }` to Payment interface
+  - Supports both legacy single `qrCode` and new dual `qrCodes` structure
+
+#### 🐛 Bug Fixes
+- **Dropdown Z-Index**: Fixed custom Select dropdown appearing behind tables/cards
+  - Added dynamic z-index switching on open/close
+  - Added `overflow-visible` to parent Card containers
+  - Explicit positioning styles to ensure dropdown floats above all content
+- **Table Light Mode**: Fixed table header backgrounds in Cashier pages (was dark, now light)
+- **Select Value Matching**: Improved value comparison logic to handle empty strings and type coercion
+
+#### 📂 File Changes Summary
+**New Files:**
+- `frontend/src/pages/dashboard/cashier/PendingPayments.tsx`
+- `frontend/src/pages/dashboard/cashier/PaymentHistory.tsx`
+- `frontend/src/pages/dashboard/cashier/QRManagement.tsx`
+
+**Deleted Files:**
+- `frontend/src/pages/dashboard/cashier/PaymentVerification.tsx` (replaced by 3 new modules)
+
+**Modified Files:**
+- `frontend/src/App.tsx` - Updated cashier routing
+- `frontend/src/components/ui/Card.tsx` - Extended props interface
+- `frontend/src/components/ui/Table.tsx` - Extended TableCell props
+- `frontend/src/components/ui/Input.tsx` - Complete Select component rewrite
+- `frontend/src/api/services.ts` - Added `uploadQR` method
+- `frontend/src/types/index.ts` - Added `qrCodes` to Payment interface
+
+---
 ## �👥 Contributors
 
 - Development Team

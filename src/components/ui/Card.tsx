@@ -1,13 +1,13 @@
 import React from 'react';
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
   variant?: 'dark' | 'light';
 }
 
-export const Card: React.FC<CardProps> = ({ children, className = '', onClick, variant = 'dark' }) => {
+export const Card: React.FC<CardProps> = ({ children, className = '', onClick, variant = 'dark', ...props }) => {
   const baseClass =
     variant === 'light'
       ? 'bg-white border border-slate-200 rounded-lg shadow-sm'
@@ -19,6 +19,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '', onClick, v
         onClick ? 'cursor-pointer hover:border-cyan-500/50 transition-colors' : ''
       }`}
       onClick={onClick}
+      {...props}
     >
       {children}
     </div>

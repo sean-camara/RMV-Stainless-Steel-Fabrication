@@ -11,7 +11,7 @@ interface BackendNotification {
   message: string;
   read: boolean;
   createdAt: string;
-  resourceType?: string;
+  resourceType?: 'appointment' | 'project' | 'payment';
   resourceId?: string;
 }
 
@@ -76,6 +76,24 @@ const CustomerLayout: React.FC = () => {
       setNotifications(prev => prev.filter(n => n._id !== id));
     } catch (error) {
       console.error('Failed to delete notification:', error);
+    }
+  };
+
+  // Handle notification click - navigate to resource
+  const handleNotificationClick = (item: BackendNotification) => {
+    setShowNotifications(false);
+    if (item.resourceType && item.resourceId) {
+      switch (item.resourceType) {
+        case 'project':
+          navigate(`/dashboard/customer/projects/${item.resourceId}`);
+          break;
+        case 'appointment':
+          navigate(`/dashboard/customer/appointments`);
+          break;
+        case 'payment':
+          navigate(`/dashboard/customer/payments`);
+          break;
+      }
     }
   };
 
@@ -337,12 +355,16 @@ const CustomerLayout: React.FC = () => {
                       <div className="px-4 py-6 text-sm text-slate-500 text-center">No notifications yet</div>
                     ) : (
                       notifications.map((item) => (
-                        <div key={item._id} className={`px-4 py-3 border-b border-slate-100 last:border-b-0 ${!item.read ? 'bg-blue-50' : ''}`}>
+                        <div 
+                          key={item._id} 
+                          className={`px-4 py-3 border-b border-slate-100 last:border-b-0 ${!item.read ? 'bg-blue-50' : ''} ${item.resourceType && item.resourceId ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+                          onClick={() => item.resourceType && item.resourceId && handleNotificationClick(item)}
+                        >
                           {item.title && <p className="text-sm font-semibold text-slate-900">{item.title}</p>}
                           <p className="text-sm text-slate-600">{item.message}</p>
                           <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
                             <span>{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</span>
-                            <button onClick={() => handleRemoveNotification(item._id)} className="text-slate-400 hover:text-slate-600">Clear</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleRemoveNotification(item._id); }} className="text-slate-400 hover:text-slate-600">Clear</button>
                           </div>
                         </div>
                       ))
@@ -479,12 +501,16 @@ const CustomerLayout: React.FC = () => {
                         <div className="px-4 py-6 text-sm text-slate-500 text-center">No notifications yet</div>
                       ) : (
                         notifications.map((item) => (
-                          <div key={item._id} className={`px-4 py-3 border-b border-slate-100 last:border-b-0 ${!item.read ? 'bg-blue-50' : ''}`}>
+                          <div 
+                            key={item._id} 
+                            className={`px-4 py-3 border-b border-slate-100 last:border-b-0 ${!item.read ? 'bg-blue-50' : ''} ${item.resourceType && item.resourceId ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+                            onClick={() => item.resourceType && item.resourceId && handleNotificationClick(item)}
+                          >
                             {item.title && <p className="text-sm font-semibold text-slate-900">{item.title}</p>}
                             <p className="text-sm text-slate-600">{item.message}</p>
                             <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
                               <span>{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</span>
-                              <button onClick={() => handleRemoveNotification(item._id)} className="text-slate-400 hover:text-slate-600">Clear</button>
+                              <button onClick={(e) => { e.stopPropagation(); handleRemoveNotification(item._id); }} className="text-slate-400 hover:text-slate-600">Clear</button>
                             </div>
                           </div>
                         ))

@@ -106,6 +106,46 @@ export const appointmentApi = {
     const response = await api.put(`/appointments/${id}/travel-fee/verify`, data);
     return response.data;
   },
+
+  // Sales staff actions
+  accept: async (id: string) => {
+    const response = await api.put(`/appointments/${id}/accept`);
+    return response.data;
+  },
+
+  requestReschedule: async (id: string, reason: string) => {
+    const response = await api.put(`/appointments/${id}/request-reschedule`, { reason });
+    return response.data;
+  },
+
+  updateOcularVisit: async (id: string, data: {
+    status?: 'not_started' | 'in_progress' | 'completed';
+    measurements?: string;
+    feasibilityAssessment?: 'feasible' | 'needs_adjustment' | 'not_feasible';
+    observations?: string;
+    // Project draft fields
+    projectType?: string;
+    preferredMaterials?: string;
+    specialInstructions?: string;
+  }) => {
+    const response = await api.put(`/appointments/${id}/ocular-visit`, data);
+    return response.data;
+  },
+
+  submitProjectDetails: async (id: string, data: {
+    projectType: string;
+    dimensions: string;
+    preferredMaterials: string;
+    specialInstructions?: string;
+  }) => {
+    const response = await api.put(`/appointments/${id}/submit-project`, data);
+    return response.data;
+  },
+
+  updateWorkflowStatus: async (id: string, stage: string, notes?: string) => {
+    const response = await api.put(`/appointments/${id}/workflow-status`, { stage, notes });
+    return response.data;
+  },
 };
 
 // Projects API
@@ -130,7 +170,7 @@ export const projectApi = {
     limit?: number;
     status?: string;
   }) => {
-    const response = await api.get('/projects/my-projects', { params });
+    const response = await api.get('/projects', { params });
     return response.data;
   },
 
@@ -190,6 +230,16 @@ export const projectApi = {
     return response.data;
   },
 
+  acceptProject: async (id: string) => {
+    const response = await api.put(`/projects/${id}/accept`);
+    return response.data;
+  },
+
+  ownerApprove: async (id: string) => {
+    const response = await api.put(`/projects/${id}/owner-approve`);
+    return response.data;
+  },
+
   approve: async (id: string) => {
     const response = await api.put(`/projects/${id}/approve`);
     return response.data;
@@ -201,7 +251,7 @@ export const projectApi = {
   },
 
   updateStatus: async (id: string, statusOrData: string | { status: string; notes?: string }, notes?: string) => {
-    const data = typeof statusOrData === 'string' 
+    const data = typeof statusOrData === 'string'
       ? { status: statusOrData, notes } 
       : statusOrData;
     const response = await api.put(`/projects/${id}/status`, data);
@@ -214,8 +264,13 @@ export const projectApi = {
   },
 
   reviewBlueprint: async (id: string, data: { approved: boolean; feedback?: string }) => {
-    const response = await api.put(`/projects/${id}/blueprint/review`, data);
-    return response.data;
+    if (data.approved) {
+      const response = await api.put(`/projects/${id}/approve`);
+      return response.data;
+    } else {
+      const response = await api.put(`/projects/${id}/request-revision`, { feedback: data.feedback });
+      return response.data;
+    }
   },
 
   updateFabricationProgress: async (id: string, progress: number, notes?: string) => {
@@ -273,7 +328,7 @@ export const paymentApi = {
     return response.data;
   },
 
-  uploadQRCode: async (id: string, formData: FormData) => {
+  uploadQR: async (id: string, formData: FormData) => {
     const response = await api.post(`/payments/${id}/qrcode`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
