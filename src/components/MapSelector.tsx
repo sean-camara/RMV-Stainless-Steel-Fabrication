@@ -168,7 +168,7 @@ const MapSelector: React.FC<MapSelectorProps> = ({ initialLat, initialLng, onLoc
         </Button>
       </div>
 
-      <div className="h-[400px] w-full rounded-xl overflow-hidden border border-slate-200 shadow-inner relative z-0">
+      <div className="h-[500px] w-full rounded-xl overflow-hidden border border-slate-200 shadow-inner relative z-0">
         <MapContainer center={position} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

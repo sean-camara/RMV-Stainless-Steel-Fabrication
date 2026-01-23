@@ -543,11 +543,11 @@ const CustomerDashboard: React.FC = () => {
             <div className="flex items-baseline space-x-12">
               <div>
                 <p className="text-4xl md:text-5xl font-bold tracking-tighter text-white">100%</p>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Quality Assurance</p>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Quality-Assured Fabrication</p>
               </div>
               <div>
-                <p className="text-4xl md:text-5xl font-bold tracking-tighter text-white">24/7</p>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Project Support</p>
+                <p className="text-4xl md:text-5xl font-bold tracking-tighter text-white">Ongoing</p>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Project Guidance</p>
               </div>
             </div>
           </div>

@@ -240,8 +240,8 @@ export const projectApi = {
     return response.data;
   },
 
-  approve: async (id: string) => {
-    const response = await api.put(`/projects/${id}/approve`);
+  approve: async (id: string, data?: { paymentPlan?: 'staged' | 'full' }) => {
+    const response = await api.put(`/projects/${id}/approve`, data || {});
     return response.data;
   },
 
@@ -263,9 +263,9 @@ export const projectApi = {
     return response.data;
   },
 
-  reviewBlueprint: async (id: string, data: { approved: boolean; feedback?: string }) => {
+  reviewBlueprint: async (id: string, data: { approved: boolean; feedback?: string; paymentPlan?: 'staged' | 'full' }) => {
     if (data.approved) {
-      const response = await api.put(`/projects/${id}/approve`);
+      const response = await api.put(`/projects/${id}/approve`, { paymentPlan: data.paymentPlan });
       return response.data;
     } else {
       const response = await api.put(`/projects/${id}/request-revision`, { feedback: data.feedback });

@@ -129,6 +129,7 @@ const PendingPayments: React.FC = () => {
       downpayment: '30% Downpayment',
       progress: '40% Progress',
       final: '30% Final',
+      full: 'Full Payment (100%)',
     };
     return labels[stage] || stage;
   };

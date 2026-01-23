@@ -25,6 +25,56 @@ const TIME_SLOTS = [
   { time: '17:00', label: '5:00 PM' },
 ];
 
+const INTEREST_TEMPLATES = [
+  {
+    label: 'Grill',
+    value: 'Window grill: type, dimensions, and finish preference.',
+  },
+  {
+    label: 'Gate',
+    value: 'Gate: driveway width, height, material, and design style.',
+  },
+  {
+    label: 'Railing',
+    value: 'Railing: location, length, height, and preferred design.',
+  },
+  {
+    label: 'Stairs',
+    value: 'Stairs: number of steps, width, handrail style, and finish.',
+  },
+  {
+    label: 'Kitchen',
+    value: 'Kitchen layout: counter length, sink placement, and finish.',
+  },
+  {
+    label: 'Canopy',
+    value: 'Canopy: area coverage, height, and material preference.',
+  },
+];
+
+const NOTES_TEMPLATES = [
+  {
+    label: 'Style',
+    value: 'Preferred style: modern / classic / industrial / minimalist.',
+  },
+  {
+    label: 'Materials',
+    value: 'Material preference: stainless steel / glass / wood accents.',
+  },
+  {
+    label: 'Measurements',
+    value: 'Approx. measurements: length, height, and thickness.',
+  },
+  {
+    label: 'Timeline',
+    value: 'Target timeline: preferred start and completion dates.',
+  },
+  {
+    label: 'Budget',
+    value: 'Budget range: estimate or target budget.',
+  },
+];
+
 interface SiteAddress {
   street: string;
   barangay: string;
@@ -596,8 +646,34 @@ const BookAppointment: React.FC = () => {
                     rows={4}
                     className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none shadow-sm text-sm"
                   />
-               </div>
-             </div>
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
+                      Templates
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {INTEREST_TEMPLATES.map((template) => (
+                        <button
+                          key={template.label}
+                          type="button"
+                          onClick={() =>
+                            setProjectInterest((current) =>
+                              current.trim()
+                                ? `${current.trim()}\n${template.value}`
+                                : template.value
+                            )
+                          }
+                          className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-900 hover:text-slate-900 transition-colors shadow-sm"
+                        >
+                          {template.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2">
+                      Click a template to insert a starter description.
+                    </p>
+                  </div>
+                </div>
+              </div>
           </div>
 
           <div className="flex justify-end pt-4 border-t border-slate-100">
@@ -1001,15 +1077,41 @@ const BookAppointment: React.FC = () => {
                  <div className="flex-1">
                     <label className="block text-slate-900 font-bold mb-2">Project Notes (Optional)</label>
                     <p className="text-sm text-slate-500 mb-4">You can provide extra details, measurements, or specific focus areas for our discussion.</p>
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      rows={3}
-                      placeholder="e.g. I prefer modern industrial style, approximate size is 30sqm..."
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none shadow-sm text-sm"
-                    />
-                 </div>
-               </div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. I prefer modern industrial style, approximate size is 30sqm..."
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent resize-none shadow-sm text-sm"
+                  />
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2">
+                      Templates
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {NOTES_TEMPLATES.map((template) => (
+                        <button
+                          key={template.label}
+                          type="button"
+                          onClick={() =>
+                            setDescription((current) =>
+                              current.trim()
+                                ? `${current.trim()}\n${template.value}`
+                                : template.value
+                            )
+                          }
+                          className="px-3 py-1.5 rounded-full border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:border-slate-900 hover:text-slate-900 transition-colors shadow-sm"
+                        >
+                          {template.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2">
+                      Click a template to insert a starter note.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Preparation Tips */}

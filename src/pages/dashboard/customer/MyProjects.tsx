@@ -136,6 +136,7 @@ const MyProjects: React.FC = () => {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [revisionFeedback, setRevisionFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [paymentPlan, setPaymentPlan] = useState<'staged' | 'full'>('staged');
   const [activeTab, setActiveTab] = useState<'blueprint' | 'quotation' | 'history'>('blueprint');
   const [pdfPageCount, setPdfPageCount] = useState<number>(0);
   const pdfOptions = useMemo(() => ({ withCredentials: true }), []);
@@ -191,6 +192,11 @@ const MyProjects: React.FC = () => {
     setRevisionFeedback('');
   };
 
+  const openApproveModal = () => {
+    setPaymentPlan('staged');
+    setShowApproveModal(true);
+  };
+
   const getStatusStyle = (status: string) => {
     switch(status) {
        case 'client_approved':
@@ -228,6 +234,7 @@ const MyProjects: React.FC = () => {
       customer_approved: 35,
       approved: 45,
       pending_initial_payment: 45,
+      pending_full_payment: 45,
       client_rejected: 25,
       dp_pending: 45,
       in_fabrication: 65,
@@ -241,7 +248,7 @@ const MyProjects: React.FC = () => {
   const handleApproveBlueprint = async (projectId: string) => {
     setSubmitting(true);
     try {
-      await projectApi.reviewBlueprint(projectId, { approved: true });
+      await projectApi.reviewBlueprint(projectId, { approved: true, paymentPlan });
       fetchProjects();
       closeDetailModal();
       setShowApproveModal(false);
@@ -673,7 +680,7 @@ const MyProjects: React.FC = () => {
                     Request Modification
                  </button>
                  <button
-                    onClick={() => setShowApproveModal(true)}
+                    onClick={openApproveModal}
                     className="flex-1 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm"
                  >
                     Approve Design
@@ -728,6 +735,38 @@ const MyProjects: React.FC = () => {
               <p className="text-sm text-slate-500 mb-6">
                  By approving, you confirm the blueprint meets your requirements. The project will move to the next stage.
               </p>
+
+              <div className="text-left bg-slate-50 border border-slate-200 rounded-lg p-3 mb-6">
+                <p className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Payment Plan</p>
+                <label className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-white transition-colors cursor-pointer">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Pay in stages</p>
+                    <p className="text-xs text-slate-500">30% â€¢ 40% â€¢ 30%</p>
+                  </div>
+                  <input
+                    type="radio"
+                    name="paymentPlan"
+                    value="staged"
+                    checked={paymentPlan === 'staged'}
+                    onChange={() => setPaymentPlan('staged')}
+                    className="h-4 w-4 text-slate-900 border-slate-300"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-white transition-colors cursor-pointer">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Pay in full</p>
+                    <p className="text-xs text-slate-500">100% upfront</p>
+                  </div>
+                  <input
+                    type="radio"
+                    name="paymentPlan"
+                    value="full"
+                    checked={paymentPlan === 'full'}
+                    onChange={() => setPaymentPlan('full')}
+                    className="h-4 w-4 text-slate-900 border-slate-300"
+                  />
+                </label>
+              </div>
               
               <div className="flex gap-3">
                    <button onClick={() => setShowApproveModal(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium">Cancel</button>

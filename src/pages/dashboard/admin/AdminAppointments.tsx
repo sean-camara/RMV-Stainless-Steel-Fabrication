@@ -90,6 +90,26 @@ const AdminAppointments: React.FC = () => {
     );
   });
 
+  const statusPriority: Record<string, number> = {
+    pending: 0,
+    scheduled: 1,
+    assigned: 2,
+    confirmed: 3,
+    in_progress: 4,
+    completed: 5,
+    cancelled: 6,
+    no_show: 7,
+  };
+
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    const priorityA = statusPriority[a.status] ?? 99;
+    const priorityB = statusPriority[b.status] ?? 99;
+    if (priorityA !== priorityB) return priorityA - priorityB;
+    const timeA = new Date(a.scheduledDate).getTime();
+    const timeB = new Date(b.scheduledDate).getTime();
+    return timeB - timeA;
+  });
+
   const stats = {
     total: appointments.length,
     pending: appointments.filter(a => a.status === 'pending').length,
@@ -228,7 +248,7 @@ const AdminAppointments: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredAppointments.map((apt) => (
+                  {sortedAppointments.map((apt) => (
                     <tr key={apt._id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div>
@@ -270,7 +290,7 @@ const AdminAppointments: React.FC = () => {
 
             {/* Mobile Cards */}
             <div className="lg:hidden divide-y divide-slate-100">
-              {filteredAppointments.map((apt) => (
+              {sortedAppointments.map((apt) => (
                 <div key={apt._id} className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>

@@ -14,9 +14,9 @@ interface Payment {
       email: string;
     };
   };
-  stage: 'downpayment' | 'progress' | 'final';
-  amount: number;
-  status: 'pending' | 'paid' | 'verified' | 'rejected';
+  stage: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final' | 'full' | 'downpayment' | 'progress';
+  amount: number | { expected?: number; received?: number };
+  status: 'pending' | 'submitted' | 'verified' | 'rejected' | 'paid';
   paymentMethod?: string;
   referenceNumber?: string;
   createdAt: string;
@@ -62,6 +62,7 @@ const AdminPayments: React.FC = () => {
     const styles: Record<string, string> = {
       pending: 'bg-amber-50 text-amber-700 border-amber-200',
       paid: 'bg-blue-50 text-blue-700 border-blue-200',
+      submitted: 'bg-blue-50 text-blue-700 border-blue-200',
       verified: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       rejected: 'bg-red-50 text-red-700 border-red-200',
     };
@@ -74,13 +75,19 @@ const AdminPayments: React.FC = () => {
 
   const getStageBadge = (stage: string) => {
     const styles: Record<string, string> = {
+      design_fee: 'bg-slate-100 text-slate-700 border-slate-200',
+      ocular_fee: 'bg-slate-100 text-slate-700 border-slate-200',
       downpayment: 'bg-purple-50 text-purple-700 border-purple-200',
+      initial: 'bg-purple-50 text-purple-700 border-purple-200',
       progress: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+      midpoint: 'bg-cyan-50 text-cyan-700 border-cyan-200',
       final: 'bg-slate-100 text-slate-700 border-slate-200',
+      full: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     };
+    const label = stage.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     return (
       <span className={`px-2.5 py-1 text-xs font-medium rounded-lg border ${styles[stage] || 'bg-slate-50 text-slate-600'}`}>
-        {stage.replace(/\b\w/g, l => l.toUpperCase())}
+        {label}
       </span>
     );
   };
@@ -107,11 +114,16 @@ const AdminPayments: React.FC = () => {
   const stats = {
     total: payments.length,
     pending: payments.filter(p => p.status === 'pending').length,
-    awaiting: payments.filter(p => p.status === 'paid').length,
+    awaiting: payments.filter(p => p.status === 'paid' || p.status === 'submitted').length,
     verified: payments.filter(p => p.status === 'verified').length,
   };
 
-  const totalAmount = payments.reduce((sum, p) => sum + (p.status === 'verified' ? p.amount : 0), 0);
+  const getPaymentAmount = (payment: Payment) => {
+    if (typeof payment.amount === 'number') return payment.amount;
+    return payment.amount?.received ?? payment.amount?.expected ?? 0;
+  };
+
+  const totalAmount = payments.reduce((sum, p) => sum + (p.status === 'verified' ? getPaymentAmount(p) : 0), 0);
 
   if (isLoading) {
     return (
@@ -214,7 +226,7 @@ const AdminPayments: React.FC = () => {
           >
             <option value="">All Statuses</option>
             <option value="pending">Pending</option>
-            <option value="paid">Paid (Awaiting)</option>
+            <option value="submitted">Submitted (Awaiting)</option>
             <option value="verified">Verified</option>
             <option value="rejected">Rejected</option>
           </select>
@@ -224,9 +236,12 @@ const AdminPayments: React.FC = () => {
             className="rmv-select w-full sm:w-44"
           >
             <option value="">All Stages</option>
-            <option value="downpayment">Downpayment</option>
-            <option value="progress">Progress</option>
-            <option value="final">Final</option>
+            <option value="design_fee">Design Fee</option>
+            <option value="ocular_fee">Ocular Fee</option>
+            <option value="initial">Initial (30%)</option>
+            <option value="midpoint">Midpoint (40%)</option>
+            <option value="final">Final (30%)</option>
+            <option value="full">Full (100%)</option>
           </select>
         </div>
       </div>
@@ -280,7 +295,7 @@ const AdminPayments: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">{getStageBadge(payment.stage)}</td>
                       <td className="px-6 py-4">
-                        <span className="font-bold text-slate-900">{formatCurrency(payment.amount)}</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(getPaymentAmount(payment))}</span>
                       </td>
                       <td className="px-6 py-4">{getStatusBadge(payment.status)}</td>
                       <td className="px-6 py-4">
@@ -319,7 +334,7 @@ const AdminPayments: React.FC = () => {
                         <span className="text-xs text-slate-500 font-mono">{payment.referenceNumber}</span>
                       )}
                     </div>
-                    <span className="font-bold text-slate-900">{formatCurrency(payment.amount)}</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(getPaymentAmount(payment))}</span>
                   </div>
                 </div>
               ))}

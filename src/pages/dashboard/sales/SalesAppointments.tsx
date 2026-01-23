@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
@@ -101,6 +101,11 @@ const SalesAppointments: React.FC = () => {
   const [mapPreviewCoords, setMapPreviewCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [mapPreviewLoading, setMapPreviewLoading] = useState(false);
   const [mapPreviewError, setMapPreviewError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'upcoming' | 'history'>('all');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
   
   // Modal states
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -109,6 +114,16 @@ const SalesAppointments: React.FC = () => {
 
   useEffect(() => {
     fetchAppointments();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+        setStatusMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -313,6 +328,106 @@ const SalesAppointments: React.FC = () => {
   const pendingRecording = appointments.filter(a => a.salesAcceptance?.accepted && !a.projectSubmission?.submitted).length;
   const submitted = appointments.filter(a => a.projectSubmission?.submitted).length;
 
+  const statusOptions = [
+    { value: '', label: 'All Status' },
+    { value: 'awaiting_acceptance', label: 'Awaiting Acceptance' },
+    { value: 'scheduled', label: 'Scheduled' },
+    { value: 'confirmed', label: 'Confirmed' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'no_show', label: 'No Show' },
+  ];
+
+  const selectedStatusLabel =
+    statusOptions.find((option) => option.value === statusFilter)?.label || 'All Status';
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isPastStatus = (appointment: Appointment) =>
+    ['completed', 'cancelled', 'no_show'].includes(appointment.status);
+
+  const isUpcoming = (appointment: Appointment) => {
+    const appointmentDate = new Date(appointment.scheduledDate);
+    appointmentDate.setHours(0, 0, 0, 0);
+    return appointmentDate >= today && !isPastStatus(appointment);
+  };
+
+  const isAwaitingAcceptance = (appointment: Appointment) =>
+    !appointment.salesAcceptance?.accepted &&
+    appointment.status !== 'cancelled' &&
+    appointment.status !== 'completed';
+
+  const hasRecordButton = (appointment: Appointment) =>
+    appointment.salesAcceptance?.accepted &&
+    !appointment.projectSubmission?.submitted &&
+    appointment.status !== 'cancelled';
+
+  const canRecordToday = (appointment: Appointment) => {
+    const appointmentDate = new Date(appointment.scheduledDate);
+    appointmentDate.setHours(0, 0, 0, 0);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    return appointmentDate.getTime() === todayDate.getTime();
+  };
+
+  const statusPriority: Record<string, number> = {
+    scheduled: 2,
+    confirmed: 3,
+    in_progress: 4,
+    completed: 5,
+    cancelled: 6,
+  };
+
+  const filteredByTab = appointments.filter((appointment) => {
+    if (activeTab === 'upcoming') {
+      return isUpcoming(appointment);
+    }
+    if (activeTab === 'history') {
+      return !isUpcoming(appointment) || isPastStatus(appointment);
+    }
+    return true;
+  });
+
+  const filteredByControls = filteredByTab.filter((appointment) => {
+    if (statusFilter) {
+      if (statusFilter === 'awaiting_acceptance' && !isAwaitingAcceptance(appointment)) {
+        return false;
+      }
+      if (statusFilter !== 'awaiting_acceptance' && appointment.status !== statusFilter) {
+        return false;
+      }
+    }
+    if (dateFilter) {
+      const appointmentDate = new Date(appointment.scheduledDate);
+      appointmentDate.setHours(0, 0, 0, 0);
+      const filterDate = new Date(dateFilter);
+      filterDate.setHours(0, 0, 0, 0);
+      if (appointmentDate.getTime() !== filterDate.getTime()) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const sortedAppointments = [...filteredByControls].sort((a, b) => {
+    const priorityA = hasRecordButton(a)
+      ? 0
+      : isAwaitingAcceptance(a)
+        ? 1
+        : (statusPriority[a.status] ?? 99);
+    const priorityB = hasRecordButton(b)
+      ? 0
+      : isAwaitingAcceptance(b)
+        ? 1
+        : (statusPriority[b.status] ?? 99);
+    if (priorityA !== priorityB) return priorityA - priorityB;
+    const timeA = new Date(a.scheduledDate).getTime();
+    const timeB = new Date(b.scheduledDate).getTime();
+    return timeA - timeB;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -387,6 +502,83 @@ const SalesAppointments: React.FC = () => {
         </div>
       </div>
 
+      {/* Tabs + Filters */}
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white shadow-[0_8px_30_rgb(0,0,0,0.04)] px-4 md:px-6 relative z-30 overflow-visible">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-slate-200">
+          <div className="flex gap-6 text-sm font-semibold text-slate-500">
+          {[
+            { id: 'all', label: 'All Appointments' },
+            { id: 'upcoming', label: 'Upcoming' },
+            { id: 'history', label: 'Past History' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as 'all' | 'upcoming' | 'history')}
+                className={`-mb-px pb-3 pt-4 border-b-2 transition-colors ${
+                  isActive
+                    ? 'border-slate-900 text-slate-900'
+                    : 'border-transparent hover:text-slate-700'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 pb-3 lg:pb-0 lg:pt-2">
+            <div className="min-w-[180px] relative z-40" ref={statusMenuRef}>
+              <button
+                type="button"
+                onClick={() => setStatusMenuOpen((open) => !open)}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+              >
+                <span>{selectedStatusLabel}</span>
+                <ChevronRight
+                  className={`w-4 h-4 text-slate-500 transition-transform ${statusMenuOpen ? 'rotate-90' : ''}`}
+                />
+              </button>
+              {statusMenuOpen && (
+                <div className="absolute z-30 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                  <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-slate-400 font-bold bg-slate-50">
+                    Filter Status
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value || 'all'}
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter(option.value);
+                          setStatusMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors ${
+                          statusFilter === option.value
+                            ? 'bg-purple-50 text-purple-700'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="min-w-[180px]">
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 cursor-pointer hover:bg-slate-50 transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Appointments List */}
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white shadow-[0_8px_30_rgb(0,0,0,0.04)] overflow-hidden hero-fade-up" style={{ animationDelay: '0.2s' }}>
         <div className="p-6 md:p-8 border-b border-slate-100/50">
@@ -403,19 +595,19 @@ const SalesAppointments: React.FC = () => {
           </div>
         </div>
 
-        {appointments.length === 0 ? (
+        {sortedAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-6">
               <Calendar className="w-10 h-10 text-slate-300" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-2">No Appointments Assigned</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">No Appointments Found</h3>
             <p className="text-slate-500 text-sm max-w-md font-light leading-relaxed">
-              When the appointment agent assigns new visits to you, they will appear here instantly.
+              Try switching tabs or check back later for updates.
             </p>
           </div>
         ) : (
           <div className="divide-y divide-slate-100/50">
-            {appointments.map((apt) => {
+            {sortedAppointments.map((apt) => {
               const customerFirstName = apt.customer?.profile?.firstName || apt.customer?.firstName || 'Unknown';
               const customerLastName = apt.customer?.profile?.lastName || apt.customer?.lastName || '';
               const customerPhone = apt.customer?.profile?.phone || apt.customer?.phone;
@@ -464,12 +656,28 @@ const SalesAppointments: React.FC = () => {
                   <div className="flex items-center gap-3 w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-0 border-slate-100">
                     {/* Go to Recording button - only if accepted and not cancelled */}
                     {apt.salesAcceptance?.accepted && !apt.projectSubmission?.submitted && apt.status !== 'cancelled' && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); navigate(`/dashboard/sales/recording/${apt._id}`); }}
-                        className="flex-1 md:flex-none px-5 py-2.5 bg-purple-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-purple-700 transition-all shadow-lg shadow-purple-200"
-                      >
-                        Record Data
-                      </button>
+                      <div className="relative group">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!canRecordToday(apt)) return;
+                            navigate(`/dashboard/sales/recording/${apt._id}`);
+                          }}
+                          disabled={!canRecordToday(apt)}
+                          className={`flex-1 md:flex-none px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-purple-200 ${
+                            canRecordToday(apt)
+                              ? 'bg-purple-600 text-white hover:bg-purple-700'
+                              : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                          }`}
+                        >
+                          Record Data
+                        </button>
+                        {!canRecordToday(apt) && (
+                          <div className="absolute right-0 top-full mt-2 w-max max-w-[240px] px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[11px] font-semibold shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            Available on {format(new Date(apt.scheduledDate), 'MMMM d, yyyy')}
+                          </div>
+                        )}
+                      </div>
                     )}
                     {/* Accept button - only if not accepted */}
                     {!apt.salesAcceptance?.accepted && apt.status !== 'cancelled' && apt.status !== 'completed' && (

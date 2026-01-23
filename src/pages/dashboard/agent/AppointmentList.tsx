@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { appointmentApi, userApi } from '../../../api/services';
 import toast from 'react-hot-toast';
@@ -130,6 +130,8 @@ const AppointmentList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
   
   // Pagination
   const [page, setPage] = useState(1);
@@ -152,6 +154,16 @@ const AppointmentList: React.FC = () => {
     fetchAppointments();
     fetchSalesStaff();
   }, [page, statusFilter, dateFilter]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+        setStatusMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchAppointments = async () => {
     try {
@@ -328,12 +340,45 @@ const AppointmentList: React.FC = () => {
     );
   });
 
+  const statusPriority: Record<string, number> = {
+    pending: 0,
+    scheduled: 1,
+    assigned: 2,
+    confirmed: 3,
+    in_progress: 4,
+    completed: 5,
+    cancelled: 6,
+    no_show: 7,
+  };
+
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    const priorityA = statusPriority[a.status] ?? 99;
+    const priorityB = statusPriority[b.status] ?? 99;
+    if (priorityA !== priorityB) return priorityA - priorityB;
+    const timeA = new Date(a.scheduledDate).getTime();
+    const timeB = new Date(b.scheduledDate).getTime();
+    return timeB - timeA;
+  });
+
   const stats = {
     total: appointments.length,
     pending: appointments.filter(a => a.status === 'pending').length,
     assigned: appointments.filter(a => a.status === 'assigned').length,
     completed: appointments.filter(a => a.status === 'completed').length,
   };
+
+  const statusOptions = [
+    { value: '', label: 'All Status' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'assigned', label: 'Assigned' },
+    { value: 'confirmed', label: 'Confirmed' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'no_show', label: 'No Show' },
+  ];
+
+  const selectedStatusLabel =
+    statusOptions.find((option) => option.value === statusFilter)?.label || 'All Status';
 
   return (
     <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 min-h-screen p-4 md:p-6 lg:p-8 space-y-6 relative overflow-hidden">
@@ -379,7 +424,7 @@ const AppointmentList: React.FC = () => {
       </div>
 
       {/* Filters & Actions */}
-      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white p-4 shadow-sm">
+      <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-white p-4 shadow-sm relative z-30 overflow-visible">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -391,20 +436,46 @@ const AppointmentList: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
             />
           </div>
-          <div className="flex gap-4">
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer hover:bg-slate-50 transition-colors min-w-[160px]"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="assigned">Assigned</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="no_show">No Show</option>
-            </select>
+          <div className="flex gap-4 relative z-30">
+            <div className="relative min-w-[180px] z-40" ref={statusMenuRef}>
+              <button
+                type="button"
+                onClick={() => setStatusMenuOpen((open) => !open)}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between gap-3"
+              >
+                <span>{selectedStatusLabel}</span>
+                <ChevronRight
+                  className={`w-4 h-4 text-slate-500 transition-transform ${statusMenuOpen ? 'rotate-90' : ''}`}
+                />
+              </button>
+              {statusMenuOpen && (
+                <div className="absolute z-20 mt-2 w-full rounded-2xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+                  <div className="px-4 py-2 text-[11px] uppercase tracking-[0.25em] text-slate-400 font-bold bg-slate-50">
+                    Filter Status
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value || 'all'}
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter(option.value);
+                          setPage(1);
+                          setStatusMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors ${
+                          statusFilter === option.value
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <input
               type="date"
               value={dateFilter}
@@ -453,7 +524,7 @@ const AppointmentList: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredAppointments.map((apt) => {
+                  {sortedAppointments.map((apt) => {
                     const customer = getCustomerName(apt.customer);
                     return (
                     <tr key={apt._id} className="hover:bg-slate-50/80 transition-colors group">
@@ -544,7 +615,7 @@ const AppointmentList: React.FC = () => {
 
             {/* Mobile Cards */}
             <div className="lg:hidden divide-y divide-slate-100">
-              {filteredAppointments.map((apt) => {
+              {sortedAppointments.map((apt) => {
                 const customer = getCustomerName(apt.customer);
                 return (
                 <div key={apt._id} className="p-4 bg-white/50 hover:bg-white transition-colors">

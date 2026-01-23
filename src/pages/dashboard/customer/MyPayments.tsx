@@ -17,8 +17,8 @@ interface Payment {
     expected: number;
     received?: number;
   };
-  stage?: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final' | 'downpayment' | 'progress';
-  type?: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final' | 'downpayment' | 'progress';
+  stage?: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final' | 'full' | 'downpayment' | 'progress';
+  type?: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final' | 'full' | 'downpayment' | 'progress';
   status: 'pending' | 'submitted' | 'verified' | 'rejected';
   qrCode?: {
     url?: string;
@@ -90,6 +90,8 @@ const MyPayments: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('proof', file);
+      // Include paymentMethod - use 'bank_transfer' instead of 'bank' to match backend enum
+      formData.append('paymentMethod', paymentMethod === 'bank' ? 'bank_transfer' : paymentMethod);
       await paymentApi.uploadProof(selectedPayment._id, formData);
       notify({ type: 'success', title: 'Success', message: 'Proof uploaded! We will verify it shortly.' });
       fetchPayments();
@@ -112,6 +114,7 @@ const MyPayments: React.FC = () => {
       midpoint: { label: 'Midpoint Payment', percentage: 40, order: 2, isFee: false },
       progress: { label: 'Midpoint Payment', percentage: 40, order: 2, isFee: false },
       final: { label: 'Final Payment', percentage: 30, order: 3, isFee: false },
+      full: { label: 'Full Payment', percentage: 100, order: 1, isFee: false },
     };
     return stages[type] || { label: type, percentage: 0, order: 0, isFee: false };
   };

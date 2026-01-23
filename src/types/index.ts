@@ -111,6 +111,7 @@ export type AppointmentStatus =
   | 'in_progress'
   | 'completed'
   | 'cancelled'
+  | 'declined'
   | 'no_show';
 
 export interface TimeSlot {
@@ -189,6 +190,7 @@ export type ProjectStatus =
   | 'revision_requested'
   | 'approved'
   | 'pending_initial_payment'
+  | 'pending_full_payment'
   | 'dp_pending'
   | 'initial_payment_verified'
   | 'in_fabrication'
@@ -328,7 +330,7 @@ export interface Payment {
   projectId?: Project; // Alias for backward compatibility
   customer: User;
   customerId?: User; // Alias for backward compatibility
-  stage: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final';
+  stage: 'design_fee' | 'ocular_fee' | 'initial' | 'midpoint' | 'final' | 'full';
   amount: {
     expected: number;
     received?: number;

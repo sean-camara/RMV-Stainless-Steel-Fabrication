@@ -73,6 +73,7 @@ const FabricationQueue: React.FC = () => {
       const fabricationStatuses = [
         'dp_pending',
         'pending_initial_payment',
+        'pending_full_payment',
         'pending_midpoint_payment',
         'midpoint_payment_verified',
         'in_fabrication',
@@ -212,7 +213,7 @@ const FabricationQueue: React.FC = () => {
   });
 
   // Stats
-  const inQueue = projects.filter((p) => ['dp_pending', 'pending_initial_payment'].includes(p.status)).length;
+  const inQueue = projects.filter((p) => ['dp_pending', 'pending_initial_payment', 'pending_full_payment'].includes(p.status)).length;
   const inProgress = projects.filter((p) => p.status === 'in_fabrication').length;
   const completed = projects.filter((p) => p.status === 'fabrication_done').length;
   const readyForPickup = projects.filter((p) => p.status === 'ready_for_pickup').length;
@@ -238,7 +239,7 @@ const FabricationQueue: React.FC = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-white">{inQueue}</p>
-              <p className="text-sm text-yellow-200">Awaiting DP</p>
+              <p className="text-sm text-yellow-200">Awaiting Payment</p>
             </div>
           </CardContent>
         </Card>
@@ -300,6 +301,7 @@ const FabricationQueue: React.FC = () => {
                   { value: '', label: 'All Status' },
                   { value: 'dp_pending', label: 'Awaiting DP' },
                   { value: 'pending_initial_payment', label: 'Awaiting DP (alias)' },
+                  { value: 'pending_full_payment', label: 'Awaiting Full Payment' },
                   { value: 'in_fabrication', label: 'In Fabrication' },
                   { value: 'fabrication_done', label: 'Fabrication Done' },
                   { value: 'ready_for_pickup', label: 'Ready for Pickup' },
@@ -378,7 +380,7 @@ const FabricationQueue: React.FC = () => {
                         >
                           View
                         </Button>
-                        {['dp_pending', 'pending_initial_payment'].includes(project.status) && (
+                        {['dp_pending', 'pending_initial_payment', 'pending_full_payment'].includes(project.status) && (
                           <Button
                             size="sm"
                             onClick={() => {
@@ -568,7 +570,7 @@ const FabricationQueue: React.FC = () => {
             )}
 
             {/* Fabrication Notes Input */}
-            {['dp_pending', 'pending_initial_payment', 'in_fabrication', 'fabrication_done', 'ready_for_pickup'].includes(selectedProject.status) && (
+            {['dp_pending', 'pending_initial_payment', 'pending_full_payment', 'in_fabrication', 'fabrication_done', 'ready_for_pickup'].includes(selectedProject.status) && (
               <Textarea
                 label="Fabrication Notes"
                 placeholder="Add notes about the fabrication process..."
@@ -580,7 +582,7 @@ const FabricationQueue: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-3 justify-end border-t border-slate-700 pt-4">
-              {['dp_pending', 'pending_initial_payment'].includes(selectedProject.status) && (
+              {['dp_pending', 'pending_initial_payment', 'pending_full_payment'].includes(selectedProject.status) && (
                 <Button
                   onClick={() => {
                     setConfirmAction('start');
