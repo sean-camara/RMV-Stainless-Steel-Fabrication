@@ -4,9 +4,11 @@ This is the frontend web app (React + Vite). It needs the backend API running.
 
 Backend repo (separate): https://github.com/sean-camara/RMV-Stainless-Steel-Fabrication-Backend
 
-## Quick Start (TL;DR)
+## Quick Start (TL;DR) - Docker (recommended)
 
-1. Start the backend first (see backend README).
+Docker is the default and recommended way to run this project to avoid Node/version mismatches.
+
+1. Start the backend first (see backend README). It should expose the API at http://localhost:5000.
 2. Copy env file:
    ```bash
    # PowerShell
@@ -19,7 +21,7 @@ Backend repo (separate): https://github.com/sean-camara/RMV-Stainless-Steel-Fabr
    ```
 5. Open: http://localhost:5173
 
-## Quick start (Docker - easiest)
+## Quick start (Docker - recommended)
 
 Prerequisite:
 - Docker Desktop
@@ -58,6 +60,7 @@ docker compose down
 ```
 
 ## Quick start (Local - no Docker)
+This is optional. Use Docker above unless you specifically need local Node tooling.
 
 Prerequisites:
 - Node.js 18+
