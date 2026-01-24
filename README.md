@@ -4,6 +4,21 @@ This is the frontend web app (React + Vite). It needs the backend API running.
 
 Backend repo (separate): https://github.com/sean-camara/RMV-Stainless-Steel-Fabrication-Backend
 
+## Quick Start (TL;DR)
+
+1. Start the backend first (see backend README).
+2. Copy env file:
+   ```bash
+   # PowerShell
+   Copy-Item .env.example .env
+   ```
+3. Set `VITE_API_URL=http://localhost:5000/api` in `.env`.
+4. Run:
+   ```bash
+   docker compose up --build
+   ```
+5. Open: http://localhost:5173
+
 ## Quick start (Docker - easiest)
 
 Prerequisite:
