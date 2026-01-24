@@ -1,462 +1,108 @@
 # RMV Stainless Steel Fabrication - Frontend
 
-A modern, responsive web application for RMV Stainless Steel Fabrication company. Built with React, TypeScript, Vite, and Tailwind CSS.
+This is the frontend web app (React + Vite). It needs the backend API running.
 
-## 🚀 Features
+Backend repo (separate): https://github.com/sean-camara/RMV-Stainless-Steel-Fabrication-Backend
 
-> Note: This README and the file `./.env.example` in this folder are **frontend-only**.
-> Do not use the repository root `.env.example` (it contains backend-only settings).
+## Quick start (Docker - easiest)
 
+Prerequisite:
+- Docker Desktop
 
-### Landing Pages
-- **Home Page** - Hero section, services overview, recent projects, testimonials, and call-to-action
-- **About Page** - Company history, mission, values, and team information
-- **Services Page** - Detailed service offerings with descriptions
-- **Portfolio Page** - Showcase of completed projects with filtering
-
-### Authentication System
-- User registration with email verification
-- Login with JWT authentication
-- Password reset functionality
-- Protected routes based on user roles
-
-### Role-Based Dashboards
-
-#### Customer Dashboard
-- View appointments, projects, and payments overview
-- Book new appointments
-- Track project progress
-- View payment history
-- Dark themed collapsible sidebar
-
-#### Admin Dashboard
-- Full system management
-- User management (CRUD operations)
-- Appointments management
-- Projects oversight
-- Payments tracking
-- Activity logs
-- Reports generation
-- Same dark themed collapsible sidebar as customer
-
-#### Appointment Agent Dashboard
-- Manage customer appointments
-- Calendar view
-- Assign appointments to sales staff
-- Same dark themed collapsible sidebar
-
-#### Other Role Dashboards
-- **Sales Staff** - Handle appointments and create projects
-- **Engineer** - Manage blueprints and project specifications
-- **Cashier** - Process and verify payments
-- **Fabrication Staff** - Track active fabrication projects
-
-### UI/UX Features
-- Fully responsive design (mobile, tablet, desktop)
-- Dark themed collapsible sidebar with tooltips
-- Mobile bottom navigation bar
-- Loading states with spinners
-- Empty states with icons
-- Consistent design system across all pages
-- Tailwind CSS styling with slate color palette
-
-## 🛠️ Tech Stack
-
-- **React 18** - UI library
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Utility-first CSS framework
-- **React Router v6** - Client-side routing
-- **Axios** - HTTP client for API calls
-- **Context API** - State management for authentication
-
-## 📁 Project Structure
-
-```
-frontend/
-├── public/
-│   └── 1.jpg                    # Logo image
-├── src/
-│   ├── api/
-│   │   ├── auth.ts              # Authentication API calls
-│   │   ├── client.ts            # Axios instance configuration
-│   │   └── services.ts          # Other API services
-│   ├── components/
-│   │   ├── layout/
-│   │   │   ├── CustomerLayout.tsx    # Customer dashboard layout
-│   │   │   ├── DashboardLayout.tsx   # Other roles dashboard layout
-│   │   │   ├── Footer.tsx
-│   │   │   ├── Header.tsx
-│   │   │   ├── LandingLayout.tsx
-│   │   │   └── index.ts
-│   │   ├── ui/
-│   │   │   ├── Badge.tsx
-│   │   │   ├── Button.tsx
-│   │   │   ├── Card.tsx
-│   │   │   ├── Input.tsx
-│   │   │   ├── Loading.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   ├── Table.tsx
-│   │   │   └── index.ts
-│   │   └── ProtectedRoute.tsx
-│   ├── contexts/
-│   │   └── AuthContext.tsx      # Authentication context
-│   ├── pages/
-│   │   ├── auth/
-│   │   │   ├── ForgotPassword.tsx
-│   │   │   ├── Login.tsx
-│   │   │   ├── Register.tsx
-│   │   │   ├── ResetPassword.tsx
-│   │   │   └── VerifyEmail.tsx
-│   │   ├── dashboard/
-│   │   │   ├── admin/
-│   │   │   │   ├── ActivityLogs.tsx
-│   │   │   │   ├── AdminAppointments.tsx
-│   │   │   │   ├── AdminDashboard.tsx
-│   │   │   │   ├── AdminPayments.tsx
-│   │   │   │   ├── AdminProjects.tsx
-│   │   │   │   ├── AdminReports.tsx
-│   │   │   │   └── UserManagement.tsx
-│   │   │   ├── agent/
-│   │   │   │   ├── AgentDashboard.tsx
-│   │   │   │   └── AppointmentList.tsx
-│   │   │   ├── cashier/
-│   │   │   ├── customer/
-│   │   │   │   ├── BookAppointment.tsx
-│   │   │   │   ├── CustomerDashboard.tsx
-│   │   │   │   ├── MyAppointments.tsx
-│   │   │   │   ├── MyPayments.tsx
-│   │   │   │   └── MyProjects.tsx
-│   │   │   ├── engineer/
-│   │   │   ├── fabrication/
-│   │   │   ├── sales/
-│   │   │   └── shared/
-│   │   └── landing/
-│   │       ├── About.tsx
-│   │       ├── Home.tsx
-│   │       ├── Portfolio.tsx
-│   │       └── Services.tsx
-│   ├── types/
-│   │   └── index.ts             # TypeScript type definitions
-│   ├── App.tsx                  # Main app component with routes
-│   ├── index.css                # Global styles
-│   └── main.tsx                 # Entry point
-├── index.html
-├── package.json
-├── postcss.config.js
-├── tailwind.config.js
-├── tsconfig.json
-├── tsconfig.node.json
-└── vite.config.ts
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ installed
-- npm or yarn package manager
-- Git
-
-### Installation
-
-1. **Clone the repository**
+Steps:
+1. Start the backend (in its repo):
+   - Follow the backend README
+   - Make sure API is running at http://localhost:5000
+2. Clone this repo:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/RMV-Stainless-Steel-Fabrication.git
+   git clone https://github.com/sean-camara/RMV-Stainless-Steel-Fabrication.git
    cd RMV-Stainless-Steel-Fabrication
    ```
-
-2. **Install dependencies**
+3. Create your env file:
    ```bash
-   npm install
+   # PowerShell
+   Copy-Item .env.example .env
+
+   # macOS/Linux
+   cp .env.example .env
    ```
+4. Set `VITE_API_URL` in `.env`:
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   ```
+5. Start the frontend:
+   ```bash
+   docker compose up --build
+   ```
+6. Open the app:
+   http://localhost:5173
 
-
-
-3. **Environment Setup**
-
-   1. Copy `.env.example` to `.env` in the root directory:
-      ```bash
-      cp .env.example .env
-      # On Windows (PowerShell):
-      Copy-Item .env.example .env
-      ```
-   2. Edit `.env` and set the required variables (see below for details).
-
----
-
-## ⚠️ Backend Dependency
-
-**The backend server must be running before login and API features will work.**
-Set `VITE_API_URL` in your `.env` to the backend's URL (e.g. `http://localhost:5000`).
-
----
-
-## 🌱 Environment Variables
-
-The frontend only uses a few environment variables. Others (like MongoDB settings) are not needed and should not be present in your `.env`.
-
-| Variable         | Required | Description                                 |
-|------------------|----------|---------------------------------------------|
-| VITE_API_URL     | Yes      | Base URL for backend API (include `/api`)   |
-| FRONTEND_URL     | No       | Public URL for frontend (optional)          |
-| NODE_ENV         | No       | Node environment (development/production)   |
-
-**Example .env:**
-```env
-VITE_API_URL=http://localhost:5000/api
-# FRONTEND_URL=http://localhost:5173
-# NODE_ENV=development
+Stop containers:
+```bash
+docker compose down
 ```
 
----
+## Quick start (Local - no Docker)
 
----
+Prerequisites:
+- Node.js 18+
+- npm
+- Git
+- Backend running on http://localhost:5000
 
-## 🛠️ Troubleshooting
+Steps:
+1. Clone this repo:
+   ```bash
+   git clone https://github.com/sean-camara/RMV-Stainless-Steel-Fabrication.git
+   cd RMV-Stainless-Steel-Fabrication
+   ```
+2. Create your env file:
+   ```bash
+   # PowerShell
+   Copy-Item .env.example .env
 
-**Common Issues:**
-
-1. **Login not working**
-   - Make sure the backend server is running and accessible at the URL set in `VITE_API_URL`.
-
-2. **Network/API errors**
-   - Check that `VITE_API_URL` in your `.env` matches the backend's URL.
-   - If you see CORS errors, ensure the backend allows requests from the frontend's origin.
-
-3. **Styling not applying**
-   - Run `npm run dev` to rebuild
-   - Clear browser cache
-
-4. **TypeScript errors**
-   - Run `npm run build` to see all errors
-   - Check type definitions in `src/types/index.ts`
-
----
-
-4. **Start the development server**
+   # macOS/Linux
+   cp .env.example .env
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   # or: npm ci
+   ```
+4. Start the dev server:
    ```bash
    npm run dev
    ```
+5. Open the app:
+   http://localhost:5173
 
-5. **Open in browser**
-   
-   Navigate to `http://localhost:5173` (or the port shown in terminal)
+## Environment variables (.env)
 
-   Quick verification: if login fails after opening the app, verify the backend is running and reachable at the `VITE_API_URL` you set in your `.env`.
+Required:
+- VITE_API_URL (example: http://localhost:5000/api)
 
-How to test API connectivity
+Optional:
+- FRONTEND_URL
+- NODE_ENV
 
-- If your backend exposes a health or ping endpoint, run:
+Note: VITE_API_URL can be set to http://localhost:5000 or
+http://localhost:5000/api. The axios client will append /api if missing.
 
-```bash
-curl -i "${VITE_API_URL}/health" || curl -i "${VITE_API_URL}/auth/ping"
-```
+## VS Code setup (simple)
 
-- Or check a simple GET to the API root (replace `<value>` if your `VITE_API_URL` already contains `/api`):
+1. Install extensions:
+   - ESLint
+   - Tailwind CSS IntelliSense
+   - Docker (if using Docker)
+2. Open this repo in VS Code.
+3. Run one of these:
+   - Docker: `docker compose up --build`
+   - Local: `npm run dev`
 
-```bash
-curl -i "${VITE_API_URL}"
-```
+## Troubleshooting
 
-Note: `src/api/client.ts` uses `VITE_API_URL` as the axios `baseURL`. In this repository the client defaults to include `/api` when falling back, so we recommend setting `VITE_API_URL` to include the API base (for example `http://localhost:5000/api`) to match the axios client behavior.
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` directory.
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
-## 🔧 Configuration
-
-### Tailwind CSS
-Configuration is in `tailwind.config.js`. The project uses a custom slate color palette.
-
-### Vite
-Configuration is in `vite.config.ts`. Proxy is set up for API calls to backend.
-
-### TypeScript
-Configuration is in `tsconfig.json` with strict mode enabled.
-
-## 📱 Responsive Breakpoints
-
-- **Mobile**: < 768px (md)
-- **Tablet**: 768px - 1024px
-- **Desktop**: > 1024px (lg)
-
-## 🎨 Design System
-
-### Colors
-- Primary: Slate palette (slate-50 to slate-900)
-- Accent: Blue, Green, Amber, Red for status indicators
-- Dark sidebar: slate-900 background
-
-### Components
-- Consistent card styling with `rounded-xl md:rounded-2xl`
-- SVG icons throughout (no emojis)
-- Loading spinners: `border-4 border-slate-200 border-t-slate-900`
-
-## 🔐 User Roles
-
-| Role | Access |
-|------|--------|
-| `customer` | Book appointments, view projects/payments |
-| `appointment_agent` | Manage all appointments |
-| `sales_staff` | Handle customer consultations, create projects |
-| `engineer` | Manage blueprints and specifications |
-| `cashier` | Process payments |
-| `fabrication_staff` | Track fabrication progress |
-| `admin` | Full system access |
-
-## 📝 Development Notes
-
-### Adding New Pages
-1. Create component in appropriate folder under `src/pages/`
-2. Add route in `App.tsx`
-3. Update navigation in layout component if needed
-
-### Adding New API Endpoints
-1. Add function in `src/api/services.ts`
-2. Use the configured axios client from `src/api/client.ts`
-
-<!-- Removed duplicate troubleshooting block; consolidated earlier. -->
-
-## 📄 License
-
-This project is proprietary software for RMV Stainless Steel Fabrication.
-
-## � Changelog
-
-### January 22, 2026
-
-#### 📅 Booking Appointment (BookAppointment.tsx)
-- **UI/UX improvements**: Redesigned multi-step booking wizard with better layout
-- **Form persistence**: Added `sessionStorage` to preserve form data on page refresh
-- **Map integration**: Added interactive Leaflet map for Ocular Visit address selection with geocoding
-- **Removed specialist display**: Both Office Consultation and Ocular Visit no longer show "X specialists available" - agent assigns manually
-- **Updated messaging**: Changed "Appointment Confirmed" to "Request Submitted" to reflect approval workflow
-- **Consistent staff info**: Both appointment types now show "Specialist to be assigned by agent"
-
-#### 🔔 Notification System Integration (CustomerLayout.tsx)
-- **Backend notifications**: Bell icon now fetches notifications from backend API (`/api/notifications`)
-- **Real-time polling**: Notifications refresh every 30 seconds
-- **Persistent storage**: Notifications are stored in database, not local state
-- **Unread indicators**: Blue highlight for unread notifications
-- **Removed toast popups**: Status notifications now only appear in bell icon, not as pop-up toasts
-
-#### 📋 My Appointments (MyAppointments.tsx)
-- **Removed toast notifications**: No more pop-up notifications on page load
-- **Updated status labels**: "Awaiting Approval" for pending appointments
-- **Staff display**: Shows "To be assigned" when no staff assigned yet
-
-#### 👤 User Profile & Settings
-- **Avatar upload**: New profile page with avatar upload functionality
-- **Settings page**: Account settings, notification preferences, security settings
-- **Address with coordinates**: Profile can store location coordinates from map selection
-
-#### 🗺️ Map Component (NEW)
-- **MapSelector component**: Reusable Leaflet map with address search
-- **Geocoding**: Uses OpenStreetMap Nominatim API for address lookup
-- **Click-to-select**: Users can click map to select location
-- **Search suggestions**: Address autocomplete with suggestions dropdown
-
-#### 🎨 UI/UX Enhancements
-- **Landing pages**: Updated Home, About, Services, Portfolio with new content and styling
-- **Footer**: Improved layout with better navigation links
-- **Auth pages**: Enhanced Login, Register, ForgotPassword designs
-- **New pages**: Privacy Policy, Terms of Service pages added
-
-#### 📡 API Services (services.ts)
-- **Notification API**: Added `notificationApi` with `getAll`, `getUnreadCount`, `markAsRead`, `markAllAsRead`, `delete` methods
-
-#### 🛠️ Other Improvements
-- **New utility functions**: Image URL helper, etc.
-- **Type definitions**: Extended TypeScript types for new features
-- **Leaflet integration**: Added `leaflet` and `react-leaflet` packages
----
-
-### January 22, 2026 (Latest Updates)
-
-#### 💰 Cashier Dashboard Refactor (MAJOR)
-- **Split into 3 Modules**: Refactored monolithic `PaymentVerification.tsx` into separate, focused components:
-  - **PendingPayments.tsx**: Active payment verification queue with real-time status tracking
-  - **PaymentHistory.tsx**: Complete transaction log with advanced filtering (status, search, pagination)
-  - **QRManagement.tsx**: QR code upload module for GCash and Bank Transfer QR codes
-- **UI Redesign**: Complete visual overhaul to match Customer Dashboard aesthetic
-  - Removed gradient backgrounds and excessive colors
-  - Applied clean white/slate minimalist theme (`bg-white`, `border-slate-100`, `rounded-2xl`)
-  - Professional typography with `font-black`, `tracking-tight` for headers
-  - Subtle status badges instead of colorful cards
-- **Routing Updates**: Updated `App.tsx` with new cashier routes:
-  - `/dashboard/cashier/payments` → Pending Payments (default)
-  - `/dashboard/cashier/history` → Payment History
-  - `/dashboard/cashier/qr` → QR Management
-
-#### 🎨 Custom Select Component
-- **Replaced Native Select**: Built custom dropdown from scratch to fix styling issues
-  - Full theme support (`light`/`dark` variants)
-  - Checkmark indicators for selected items
-  - Click-outside-to-close functionality
-  - Keyboard navigation ready
-  - Smooth animations (`animate-in fade-in zoom-in-95`)
-  - Fixed z-index stacking issues with high `z-[9999]` priority
-- **Added Icons**: Integrated `lucide-react` icons (`ChevronDown`, `Check`)
-- **Component Location**: `src/components/ui/Input.tsx` (Select component)
-
-#### 🔧 Component Fixes
-- **Card Component**: Extended to accept all HTML div attributes (e.g., `style`, `data-*`)
-- **Table Component**: 
-  - Extended `TableCell` to accept `colSpan` and other standard table attributes
-  - Fixed `TableEmpty` to require `colSpan` parameter
-  - Added `variant="light"` support for clean white tables
-- **Input Components**: Added `variant="light"` to all form inputs for consistency
-
-#### 📡 API & Type Updates
-- **New Payment API**: 
-  - Added `uploadQR` method to `paymentApi` (supports dual QR upload)
-  - Endpoint: `POST /payments/:id/qrcode` with FormData
-- **Extended Payment Type**: 
-  - Added `qrCodes?: { gcash?: string | FileUpload; bank?: string | FileUpload; }` to Payment interface
-  - Supports both legacy single `qrCode` and new dual `qrCodes` structure
-
-#### 🐛 Bug Fixes
-- **Dropdown Z-Index**: Fixed custom Select dropdown appearing behind tables/cards
-  - Added dynamic z-index switching on open/close
-  - Added `overflow-visible` to parent Card containers
-  - Explicit positioning styles to ensure dropdown floats above all content
-- **Table Light Mode**: Fixed table header backgrounds in Cashier pages (was dark, now light)
-- **Select Value Matching**: Improved value comparison logic to handle empty strings and type coercion
-
-#### 📂 File Changes Summary
-**New Files:**
-- `frontend/src/pages/dashboard/cashier/PendingPayments.tsx`
-- `frontend/src/pages/dashboard/cashier/PaymentHistory.tsx`
-- `frontend/src/pages/dashboard/cashier/QRManagement.tsx`
-
-**Deleted Files:**
-- `frontend/src/pages/dashboard/cashier/PaymentVerification.tsx` (replaced by 3 new modules)
-
-**Modified Files:**
-- `frontend/src/App.tsx` - Updated cashier routing
-- `frontend/src/components/ui/Card.tsx` - Extended props interface
-- `frontend/src/components/ui/Table.tsx` - Extended TableCell props
-- `frontend/src/components/ui/Input.tsx` - Complete Select component rewrite
-- `frontend/src/api/services.ts` - Added `uploadQR` method
-- `frontend/src/types/index.ts` - Added `qrCodes` to Payment interface
-
----
-## �👥 Contributors
-
-- Development Team
-
----
-
-**Backend Repository**: [RMV-Stainless-Steel-Fabrication-Backend](https://github.com/YOUR_USERNAME/RMV-Stainless-Steel-Fabrication-Backend)
+- Login/API errors:
+  - Confirm backend is running and `VITE_API_URL` is correct.
+  - Ensure backend CORS allows http://localhost:5173.
+- Docker frontend not reachable:
+  - Make sure the container runs with `--host 0.0.0.0` (handled in Dockerfile).
